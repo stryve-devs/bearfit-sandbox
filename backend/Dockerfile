@@ -21,4 +21,5 @@ EXPOSE 3000
 
 # Start the backend server (entry file is 'src/server.ts')
 CMD ["node", "src/server.ts"]
-#end of dockerfile
+#end of dockerfile.
+#testing 3
