@@ -19,5 +19,5 @@ RUN npm run build
 # Expose port 3000 for the server
 EXPOSE 3000
 
-# Start the backend server (entry file is 'dist/server.js')
-CMD ["node", "dist/server.js"]
+# Start the backend server (entry file is 'src/server.ts')
+CMD ["node", "src/server.ts"]
