@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model exercises {
+  exercise_id        Int                 @id @default(autoincrement())
+  name               String              @db.VarChar(150)
+  category           String?             @db.VarChar(100)
+  muscle_group       String?             @db.VarChar(150)
+  equipment_required String?             @db.VarChar(150)
+  workout_exercises  workout_exercises[]
+}
+
+model meals {
+  meal_id   Int      @id @default(autoincrement())
+  user_id   Int?
+  date      DateTime @db.Date
+  meal_type String?  @db.VarChar(50)
+  calories  Decimal? @db.Decimal(6, 2)
+  protein   Decimal? @db.Decimal(6, 2)
+  carbs     Decimal? @db.Decimal(6, 2)
+  fat       Decimal? @db.Decimal(6, 2)
+  notes     String?
+  users     users?   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model progress {
+  progress_id         Int      @id @default(autoincrement())
+  user_id             Int?
+  date                DateTime @db.Date
+  weight              Decimal? @db.Decimal(5, 2)
+  body_fat_percentage Decimal? @db.Decimal(5, 2)
+  chest               Decimal? @db.Decimal(5, 2)
+  waist               Decimal? @db.Decimal(5, 2)
+  hips                Decimal? @db.Decimal(5, 2)
+  arms                Decimal? @db.Decimal(5, 2)
+  legs                Decimal? @db.Decimal(5, 2)
+  progress_photo_url  String?
+  users               users?   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  user_id        Int        @id @default(autoincrement())
+  name           String     @db.VarChar(150)
+  username       String?    @unique @db.VarChar(150)
+
+  // 🔐 AUTH CORE
+  email          String     @unique @db.VarChar(320)
+  password_hash  String
+  role           String     @default("USER") @db.VarChar(20)
+  is_active      Boolean    @default(true)
+  email_verified Boolean    @default(false)
+
+  // 👤 PROFILE / FITNESS
+  gender         String?    @db.VarChar(10)
+  date_of_birth  DateTime?  @db.Date
+  height         Decimal?   @db.Decimal(5, 2)
+  weight         Decimal?   @db.Decimal(5, 2)
+  activity_level String?    @db.VarChar(30)
+  goal           String?    @db.VarChar(50)
+
+  // 🕒 TIMESTAMPS
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+
+  // 🔗 RELATIONS
+  meals          meals[]
+  progress       progress[]
+  workouts       workouts[]
+  refresh_tokens refresh_tokens[]
+
+  @@index([email])
+}
+
+model refresh_tokens {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique
+  user_id     Int
+  expires_at  DateTime
+  revoked     Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  users users @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+
+model workout_exercises {
+  workout_exercise_id Int        @id @default(autoincrement())
+  workout_id          Int?
+  exercise_id         Int?
+  sets                Int?
+  reps                Int?
+  weight              Decimal?   @db.Decimal(6, 2)
+  distance            Decimal?   @db.Decimal(6, 2)
+  time                Decimal?   @db.Decimal(6, 2)
+  exercises           exercises? @relation(fields: [exercise_id], references: [exercise_id], onDelete: Cascade, onUpdate: NoAction)
+  workouts            workouts?  @relation(fields: [workout_id], references: [workout_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model workouts {
+  workout_id        Int                 @id @default(autoincrement())
+  user_id           Int?
+  date              DateTime            @db.Date
+  type              String?             @db.VarChar(30)
+  duration_minutes  Int?
+  calories_burned   Decimal?            @db.Decimal(6, 2)
+  notes             String?
+  workout_exercises workout_exercises[]
+  users             users?              @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}

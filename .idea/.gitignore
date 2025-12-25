@@ -1,8 +1,29 @@
-# Default ignored files
+# =========================
+# JetBrains / IDE defaults (keep these)
+# =========================
 /shelf/
 /workspace.xml
-# Editor-based HTTP Client requests
 /httpRequests/
-# Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+# =========================
+# OS junk
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Editor configs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Node / frontend safety (root-level)
+# =========================
+**/node_modules/
+**/dist/
+**/.env
+**/.env.*
+
