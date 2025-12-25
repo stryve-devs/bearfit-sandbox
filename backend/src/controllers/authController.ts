@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { registerUser, loginUser } from "../services/authService";
+import {
+  registerUser,
+  loginUser,
+  refreshAccessToken,
+} from "../services/authService";
 
 /* =======================
    REGISTER
@@ -58,6 +62,32 @@ export const login = async (req: Request, res: Response) => {
   } catch (error: any) {
     return res.status(401).json({
       message: error.message || "Login failed",
+    });
+  }
+};
+
+/* =======================
+   REFRESH TOKEN (STEP 3.7)
+======================= */
+export const refresh = async (req: Request, res: Response) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        message: "refreshToken is required",
+      });
+    }
+
+    const tokens = await refreshAccessToken(refreshToken);
+
+    return res.status(200).json({
+      message: "Token refreshed successfully",
+      ...tokens,
+    });
+  } catch (error: any) {
+    return res.status(401).json({
+      message: error.message || "Invalid refresh token",
     });
   }
 };

@@ -89,6 +89,7 @@ model refresh_tokens {
 }
 
 
+
 model workout_exercises {
   workout_exercise_id Int        @id @default(autoincrement())
   workout_id          Int?

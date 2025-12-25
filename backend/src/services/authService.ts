@@ -3,6 +3,7 @@ import { hashPassword, comparePassword } from "../utils/passwordUtils";
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyRefreshToken,
   JwtPayload,
 } from "../utils/jwtUtils";
 
@@ -116,5 +117,61 @@ export const loginUser = async (data: LoginInput) => {
       username: user.username,
       role: user.role,
     },
+  };
+};
+
+/* =======================
+   REFRESH TOKEN (STEP 3.7)
+======================= */
+
+export const refreshAccessToken = async (refreshToken: string) => {
+  // 1️⃣ Verify refresh token cryptographically
+  const decoded = verifyRefreshToken(refreshToken);
+
+  // 2️⃣ Find refresh token in DB
+  const storedToken = await prisma.refresh_tokens.findUnique({
+    where: { token: refreshToken },
+  });
+
+  if (!storedToken || storedToken.revoked) {
+    throw new Error("Invalid refresh token");
+  }
+
+  // 3️⃣ Check expiry
+  if (storedToken.expires_at < new Date()) {
+    throw new Error("Refresh token expired");
+  }
+
+  // 4️⃣ Revoke old refresh token (rotation)
+  await prisma.refresh_tokens.update({
+    where: { id: storedToken.id },
+    data: { revoked: true },
+  });
+
+  // 5️⃣ Create new JWT payload
+  const payload: JwtPayload = {
+    userId: decoded.userId,
+    email: decoded.email,
+    role: decoded.role,
+  };
+
+  // 6️⃣ Generate new tokens
+  const newAccessToken = generateAccessToken(payload);
+  const newRefreshToken = generateRefreshToken(payload);
+
+  // 7️⃣ Store new refresh token
+  await prisma.refresh_tokens.create({
+    data: {
+      token: newRefreshToken,
+      user_id: storedToken.user_id,
+      expires_at: new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
+      ),
+    },
+  });
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
   };
 };
