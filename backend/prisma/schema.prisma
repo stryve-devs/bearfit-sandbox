@@ -67,6 +67,7 @@ model users {
   // 🕒 TIMESTAMPS
   created_at     DateTime   @default(now())
   updated_at     DateTime   @updatedAt
+  deleted_at     DateTime?  
 
   // 🔗 RELATIONS
   meals          meals[]

@@ -86,7 +86,7 @@ export const loginUser = async (data: LoginInput) => {
 
   // 3️⃣ JWT payload
   const payload: JwtPayload = {
-    userId: user.user_id,
+    id: user.user_id,
     email: user.email,
     role: user.role,
   };
@@ -150,7 +150,7 @@ export const refreshAccessToken = async (refreshToken: string) => {
 
   // 5️⃣ Create new JWT payload
   const payload: JwtPayload = {
-    userId: decoded.userId,
+    id: decoded.id,
     email: decoded.email,
     role: decoded.role,
   };
