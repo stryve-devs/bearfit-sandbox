@@ -1,3 +1,17 @@
+<<<<<<< HEAD
+=======
+Flutter frontend replaced the previous React Native frontend.
+
+To run locally (requires Flutter SDK):
+
+1. Install Flutter: https://flutter.dev/docs/get-started/install
+2. From this folder run:
+
+```bash
+flutter pub get
+flutter run
+```
+>>>>>>> 005f28d (Refactor(frontend): migrate React Native frontend to Flutter)
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
