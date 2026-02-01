@@ -17,12 +17,6 @@ export const register = async (
   try {
     const { name, email, password, username } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        message: "name, email, and password are required",
-      });
-    }
-
     const user = await registerUser({
       name,
       email,
@@ -35,24 +29,16 @@ export const register = async (
       user,
     });
   } catch (error: any) {
-    return res.status(400).json({
-      message: error.message || "Registration failed",
-    });
+    next(error);
   }
 };
 
 /* =======================
    LOGIN
 ======================= */
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "email and password are required",
-      });
-    }
 
     const result = await loginUser({ email, password });
 
@@ -61,24 +47,16 @@ export const login = async (req: Request, res: Response) => {
       ...result,
     });
   } catch (error: any) {
-    return res.status(401).json({
-      message: error.message || "Login failed",
-    });
+    next(error);
   }
 };
 
 /* =======================
    REFRESH TOKEN (STEP 3.7)
 ======================= */
-export const refresh = async (req: Request, res: Response) => {
+export const refresh = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        message: "refreshToken is required",
-      });
-    }
 
     const tokens = await refreshAccessToken(refreshToken);
 
@@ -87,9 +65,7 @@ export const refresh = async (req: Request, res: Response) => {
       ...tokens,
     });
   } catch (error: any) {
-    return res.status(401).json({
-      message: error.message || "Invalid refresh token",
-    });
+    next(error);
   }
 };
 

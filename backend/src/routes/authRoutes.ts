@@ -1,18 +1,26 @@
 import { Router } from "express";
 import { register, login, refresh, googleAuth } from "../controllers/authController";
+import { authRateLimiter } from "../middlewares/rateLimitMiddleware";
+import { validateRequest } from "../middlewares/validationMiddleware";
+import { 
+  registerSchema, 
+  loginSchema, 
+  refreshTokenSchema,
+  googleAuthSchema 
+} from "../utils/validationSchemas";
 
 const router = Router();
 
-// POST /auth/register
-router.post("/register", register);
+// POST /auth/register - with rate limiting and validation
+router.post("/register", authRateLimiter, validateRequest(registerSchema), register);
 
-// POST /auth/login
-router.post("/login", login);
+// POST /auth/login - with rate limiting and validation
+router.post("/login", authRateLimiter, validateRequest(loginSchema), login);
 
-// POST /auth/refresh  ✅ STEP 3.7
-router.post("/refresh", refresh);
+// POST /auth/refresh - with validation
+router.post("/refresh", validateRequest(refreshTokenSchema), refresh);
 
-// POST /auth/google  ✅ Google sign-in
-router.post("/google", googleAuth);
+// POST /auth/google - with rate limiting and validation
+router.post("/google", authRateLimiter, validateRequest(googleAuthSchema), googleAuth);
 
 export default router;
