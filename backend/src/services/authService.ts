@@ -6,8 +6,6 @@ import {
   verifyRefreshToken,
   JwtPayload,
 } from "../utils/jwtUtils";
-import { OAuth2Client } from "google-auth-library";
-import { randomBytes } from "crypto";
 
 /* =======================
    REGISTER
@@ -88,7 +86,7 @@ export const loginUser = async (data: LoginInput) => {
 
   // 3️⃣ JWT payload
   const payload: JwtPayload = {
-    id: user.user_id,
+    userId: user.user_id,
     email: user.email,
     role: user.role,
   };
@@ -152,7 +150,7 @@ export const refreshAccessToken = async (refreshToken: string) => {
 
   // 5️⃣ Create new JWT payload
   const payload: JwtPayload = {
-    id: decoded.id,
+    userId: decoded.userId,
     email: decoded.email,
     role: decoded.role,
   };
@@ -175,105 +173,5 @@ export const refreshAccessToken = async (refreshToken: string) => {
   return {
     accessToken: newAccessToken,
     refreshToken: newRefreshToken,
-  };
-};
-
-/* =======================
-   GOOGLE SIGN-IN / SIGN-UP
-   Single endpoint: accept Google ID token, verify, then find-or-create user
-======================= */
-
-export const googleSignIn = async (idToken: string) => {
-  const CLIENT_IDS_ENV = [process.env.GOOGLE_CLIENT_IDS, process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_ID_WEB]
-    .filter(Boolean)
-    .join(",");
-  const CLIENT_IDS = CLIENT_IDS_ENV.split(",").map((s) => s.trim()).filter(Boolean);
-  if (CLIENT_IDS.length === 0) throw new Error("Google client ID(s) are not configured");
-
-  // The google-auth-library `verifyIdToken` accepts `audience` as string | string[]
-  const client = new OAuth2Client();
-  const ticket = await client.verifyIdToken({ idToken, audience: CLIENT_IDS });
-  const payload = ticket.getPayload();
-
-  if (!payload || !payload.email) {
-    throw new Error("Invalid Google ID token");
-  }
-
-  const email = payload.email;
-  const name = payload.name || "";
-
-  // 1️⃣ Find existing user by email
-  // Use a loose type because we may assign a partial selection later.
-  let user: any = await prisma.users.findUnique({ where: { email } });
-
-  // 2️⃣ If user doesn't exist, create one
-  if (!user) {
-    // generate a random password and hash it to satisfy schema
-    const randomPassword = randomBytes(32).toString("hex");
-    const hashedPassword = await hashPassword(randomPassword);
-
-    // derive a safe username from email local part
-    const baseUsername = email.split("@")[0].replace(/[^a-zA-Z0-9_.-]/g, "").slice(0, 150) || undefined;
-    let usernameToUse: string | undefined = baseUsername;
-
-    // ensure username uniqueness
-    if (usernameToUse) {
-      let suffix = 0;
-      while (await prisma.users.findUnique({ where: { username: usernameToUse } })) {
-        suffix += 1;
-        usernameToUse = `${baseUsername}${suffix}`.slice(0, 150);
-      }
-    }
-
-    user = await prisma.users.create({
-      data: {
-        name,
-        email,
-        password_hash: hashedPassword,
-        username: usernameToUse,
-        email_verified: true,
-      },
-      select: {
-        user_id: true,
-        name: true,
-        email: true,
-        username: true,
-        role: true,
-      },
-    });
-  }
-
-  if (!user) throw new Error("Unable to create or find user");
-
-  // 3️⃣ JWT payload
-  const payloadJwt: JwtPayload = {
-    id: user.user_id,
-    email: user.email,
-    role: user.role,
-  };
-
-  // 4️⃣ Generate tokens
-  const accessToken = generateAccessToken(payloadJwt);
-  const refreshToken = generateRefreshToken(payloadJwt);
-
-  // 5️⃣ Store refresh token
-  await prisma.refresh_tokens.create({
-    data: {
-      token: refreshToken,
-      user_id: user.user_id,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  return {
-    accessToken,
-    refreshToken,
-    user: {
-      user_id: user.user_id,
-      name: user.name,
-      email: user.email,
-      username: user.username,
-      role: user.role,
-    },
   };
 };
