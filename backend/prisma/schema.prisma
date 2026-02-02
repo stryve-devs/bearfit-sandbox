@@ -19,6 +19,7 @@ model exercises {
 model meals {
   meal_id   Int      @id @default(autoincrement())
   user_id   Int?
+  client_id String?  @db.VarChar(100)
   date      DateTime @db.Date
   meal_type String?  @db.VarChar(50)
   calories  Decimal? @db.Decimal(6, 2)
@@ -27,11 +28,14 @@ model meals {
   fat       Decimal? @db.Decimal(6, 2)
   notes     String?
   users     users?   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, client_id])
 }
 
 model progress {
   progress_id         Int      @id @default(autoincrement())
   user_id             Int?
+  client_id           String?  @db.VarChar(100)
   date                DateTime @db.Date
   weight              Decimal? @db.Decimal(5, 2)
   body_fat_percentage Decimal? @db.Decimal(5, 2)
@@ -42,6 +46,8 @@ model progress {
   legs                Decimal? @db.Decimal(5, 2)
   progress_photo_url  String?
   users               users?   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, client_id])
 }
 
 model users {
@@ -97,6 +103,7 @@ model workout_exercises {
 model workouts {
   workout_id        Int                 @id @default(autoincrement())
   user_id           Int?
+  client_id         String?             @db.VarChar(100)
   date              DateTime            @db.Date
   type              String?             @db.VarChar(30)
   duration_minutes  Int?
@@ -104,4 +111,24 @@ model workouts {
   notes             String?
   workout_exercises workout_exercises[]
   users             users?              @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, client_id])
+}
+
+model idempotency_keys {
+  id               Int      @id @default(autoincrement())
+  user_id          Int?
+  idempotency_key  String   @db.VarChar(200)
+  method           String?  @db.VarChar(10)
+  path             String?  @db.VarChar(300)
+  request_hash     String?  @db.VarChar(128)
+  response_body    Json?
+  response_status  Int?
+  response_headers Json?
+  processing       Boolean  @default(true)
+  created_at       DateTime @default(now())
+
+  users users? @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, idempotency_key, path])
 }

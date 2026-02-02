@@ -36,3 +36,15 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
+
+// Workout creation schema (supports optional client-generated ID for offline entries)
+export const createWorkoutSchema = z.object({
+  client_id: z.string().max(100).optional(),
+  date: z.string().optional(),
+  type: z.string().max(30).optional(),
+  duration_minutes: z.number().optional(),
+  calories_burned: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+export type CreateWorkoutInput = z.infer<typeof createWorkoutSchema>;
