@@ -6,6 +6,21 @@ const router = Router();
 
 router.get("/", authenticate, getMe);
 router.patch("/", authenticate, updateMe);
+router.get("/export", authenticate, exportMe);
+router.delete("/", authenticate, async (req, res) => {
+  const { deleteMe } = await import("../controllers/me.controller");
+  return deleteMe(req as any, res as any);
+});
+
+export default router;
+import { Router } from "express";
+import { getMe, updateMe, exportMe } from "../controllers/me.controller";
+import { authenticate } from "../middlewares/authMiddleware";
+
+const router = Router();
+
+router.get("/", authenticate, getMe);
+router.patch("/", authenticate, updateMe);
 router.get("/export", authenticate, exportMe);  // <-- New export route
 router.delete("/", authenticate, async (req, res) => {
 	// lazy-load to avoid circular imports at module init
