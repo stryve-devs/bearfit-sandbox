@@ -87,6 +87,7 @@ model workout_exercises {
 model workouts {
   workout_id        Int                 @id @default(autoincrement())
   user_id           Int?
+  client_id         String?             @db.VarChar(255)
   date              DateTime            @db.Date
   type              String?             @db.VarChar(30)
   duration_minutes  Int?
@@ -94,6 +95,8 @@ model workouts {
   notes             String?
   workout_exercises workout_exercises[]
   users             users?              @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, client_id])
 }
 
 model Exercise {
