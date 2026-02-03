@@ -1,5 +1,19 @@
-// Simple router placeholder — extend with go_router or AutoRoute as needed.
-import 'package:flutter/widgets.dart';
-import 'app.dart';
+import 'package:flutter/material.dart';
+import '../screens/auth/login_screen.dart';
+import '../screens/auth/signup_screen.dart';
+import '../screens/auth/splash_screen.dart';
 
-Widget buildApp() => const App();
+class AppRouter {
+  static Route<dynamic> generate(RouteSettings settings) {
+    switch (settings.name) {
+      case '/':
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
+      case '/login':
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+      case '/signup':
+        return MaterialPageRoute(builder: (_) => const SignupScreen());
+      default:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
+    }
+  }
+}

@@ -1,4 +1,4 @@
-name: flutter_frontend
+name: frontend
 description: A Flutter frontend replacing the previous React Native app.
 publish_to: "none"
 

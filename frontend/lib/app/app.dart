@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/home/home_screen.dart';
-import '../screens/auth/login_screen.dart';
-import '../screens/auth/register_screen.dart';
-import 'theme.dart';
+import 'router.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -10,15 +7,9 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Frontend',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      initialRoute: '/auth/login',
-      routes: {
-        '/': (c) => const HomeScreen(),
-        '/auth/login': (c) => const LoginScreen(),
-        '/auth/register': (c) => const RegisterScreen(),
-      },
+      debugShowCheckedModeBanner: false,
+      onGenerateRoute: AppRouter.generate,
+      initialRoute: '/',
     );
   }
 }

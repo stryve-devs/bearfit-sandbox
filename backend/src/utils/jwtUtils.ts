@@ -28,7 +28,7 @@ if (!ACCESS_TOKEN_SECRET || !REFRESH_TOKEN_SECRET) {
  * This is what will be attached to req.user
  */
 export interface JwtPayload {
-  id: number;
+  userId: number;
   email: string;
   role: string;
 }

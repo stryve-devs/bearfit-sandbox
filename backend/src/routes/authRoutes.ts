@@ -15,13 +15,10 @@ const router = Router();
 // POST /auth/register - with rate limiting and validation
 router.post("/register", authRateLimiter, idempotencyMiddleware, validateRequest(registerSchema), register);
 
-// POST /auth/login - with rate limiting and validation
-router.post("/login", authRateLimiter, validateRequest(loginSchema), login);
+// POST /auth/login
+router.post("/login", login);
 
-// POST /auth/refresh - with validation
-router.post("/refresh", validateRequest(refreshTokenSchema), refresh);
-
-// POST /auth/google - with rate limiting and validation
-router.post("/google", authRateLimiter, validateRequest(googleAuthSchema), googleAuth);
+// POST /auth/refresh  ✅ STEP 3.7
+router.post("/refresh", refresh);
 
 export default router;
