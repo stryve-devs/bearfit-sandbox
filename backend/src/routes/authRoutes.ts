@@ -21,4 +21,7 @@ router.post("/login", login);
 // POST /auth/refresh  ✅ STEP 3.7
 router.post("/refresh", refresh);
 
+// POST /auth/google - Google ID token sign-in
+router.post("/google", idempotencyMiddleware, validateRequest(googleAuthSchema), googleAuth);
+
 export default router;

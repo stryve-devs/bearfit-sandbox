@@ -4,6 +4,7 @@ import {
   loginUser,
   refreshAccessToken,
 } from "../services/authService";
+import { googleSignIn } from "../services/authService";
 
 /* =======================
    REGISTER
@@ -89,5 +90,23 @@ export const refresh = async (req: Request, res: Response) => {
     return res.status(401).json({
       message: error.message || "Invalid refresh token",
     });
+  }
+};
+
+/* =======================
+   GOOGLE AUTH
+======================= */
+export const googleAuth = async (req: Request, res: Response) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ message: "idToken is required" });
+    }
+
+    const result = await googleSignIn(idToken);
+
+    return res.status(200).json({ message: "Google sign-in successful", ...result });
+  } catch (error: any) {
+    return res.status(400).json({ message: error.message || "Google auth failed" });
   }
 };

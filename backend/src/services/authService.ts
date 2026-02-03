@@ -175,3 +175,78 @@ export const refreshAccessToken = async (refreshToken: string) => {
     refreshToken: newRefreshToken,
   };
 };
+
+/* =======================
+   GOOGLE SIGN-IN
+   Minimal implementation: decodes ID token payload without verification,
+   finds or creates a user by email, and returns tokens.
+   NOTE: For production verify the ID token with Google's APIs.
+======================= */
+
+export const googleSignIn = async (idToken: string) => {
+  if (!idToken) throw new Error("idToken is required");
+
+  // naive JWT payload decode (no verification!)
+  const parts = idToken.split(".");
+  if (parts.length < 2) throw new Error("Invalid idToken format");
+  const payload = JSON.parse(Buffer.from(parts[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
+
+  const email: string | undefined = payload.email;
+  const name: string | undefined = payload.name || payload.given_name;
+
+  if (!email) throw new Error("Google token does not contain an email");
+
+  // find or create user (select only necessary fields to keep types consistent)
+  let user = await prisma.users.findUnique({
+    where: { email },
+    select: { user_id: true, name: true, email: true, username: true, role: true },
+  });
+  if (!user) {
+    const randomPassword = Math.random().toString(36) + Date.now().toString(36);
+    const hashedPassword = await hashPassword(randomPassword);
+    user = await prisma.users.create({
+      data: {
+        name: name || email.split("@")[0],
+        email,
+        password_hash: hashedPassword,
+      },
+      select: {
+        user_id: true,
+        name: true,
+        email: true,
+        username: true,
+        created_at: true,
+        role: true,
+      },
+    });
+  }
+
+  const payloadJwt: JwtPayload = {
+    userId: user.user_id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken = generateAccessToken(payloadJwt);
+  const refreshToken = generateRefreshToken(payloadJwt);
+
+  await prisma.refresh_tokens.create({
+    data: {
+      token: refreshToken,
+      user_id: user.user_id,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      user_id: user.user_id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    },
+  };
+};

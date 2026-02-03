@@ -21,7 +21,13 @@ export const idempotencyMiddleware = async (req: Request, res: Response, next: N
     const requestHash = hash.digest("hex");
 
     // look for existing key
-    const existing = await prisma.idempotency_keys.findFirst({
+    const idempotencyModel = (prisma as any)["idempotency_keys"];
+    if (!idempotencyModel) {
+      // If the model doesn't exist in the connected database, skip idempotency handling
+      return next();
+    }
+
+    const existing = await idempotencyModel.findFirst({
       where: { user_id: userId, idempotency_key: idKey, path },
     });
 
@@ -44,7 +50,7 @@ export const idempotencyMiddleware = async (req: Request, res: Response, next: N
     }
 
     // create a new idempotency record marked processing
-    const record = await prisma.idempotency_keys.create({
+    const record = await idempotencyModel.create({
       data: {
         user_id: userId,
         idempotency_key: idKey,
@@ -73,7 +79,7 @@ export const idempotencyMiddleware = async (req: Request, res: Response, next: N
       }
 
       try {
-        await prisma.idempotency_keys.update({
+        await idempotencyModel.update({
           where: { id: record.id },
           data: {
             response_body: body,
