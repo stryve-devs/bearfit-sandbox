@@ -7,23 +7,36 @@ class GoogleSignInButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 320,
-      child: ElevatedButton.icon(
+      child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           side: const BorderSide(color: Colors.grey),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
         ),
         onPressed: () {
           // TODO: wire Google sign-in
         },
-        icon: Image.network(
-          'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-          width: 20,
-          height: 20,
-        ),
-        label: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 12),
-          child: Text('Sign in with Google'),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Image.network(
+                'https://www.gstatic.com/images/branding/googleg/1x/googleg_standard_color_128dp.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Sign in with Google',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
         ),
       ),
     );

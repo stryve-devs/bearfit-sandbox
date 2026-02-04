@@ -24,9 +24,9 @@ class TermsScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: const Text(
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Text(
           '''
 Terms and Conditions of BearFit
 
