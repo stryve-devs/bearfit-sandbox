@@ -1,4 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+import '../signup_screen.dart';
+import '../auth_config.dart';
 
 class GoogleSignInButton extends StatelessWidget {
   const GoogleSignInButton({super.key});
@@ -6,15 +11,44 @@ class GoogleSignInButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 320,
+      width: double.infinity,
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           side: const BorderSide(color: Colors.grey),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          elevation: 0,
         ),
-        onPressed: () {
-          // TODO: wire Google sign-in
+        onPressed: () async {
+          final googleSignIn = kIsWeb
+              ? GoogleSignIn(clientId: googleWebClientId, scopes: ['email'])
+              : GoogleSignIn(scopes: ['email']);
+          try {
+            final account = await googleSignIn.signIn();
+            if (account == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Google sign-in cancelled')),
+              );
+              return;
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Signed in as ${account.email}')),
+            );
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SignupScreen()),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Google sign-in failed: $e')),
+            );
+          }
         },
         icon: Image.network(
           'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
@@ -23,7 +57,7 @@ class GoogleSignInButton extends StatelessWidget {
         ),
         label: const Padding(
           padding: EdgeInsets.symmetric(vertical: 12),
-          child: Text('Sign in with Google'),
+          child: Text('Sign up with Google'),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'package:frontend/screens/auth/widgets/primary_button.dart';
+import 'widgets/google_sign_in_button.dart';
 import 'signup_screen.dart';
 import 'login_screen.dart';
 
@@ -17,12 +18,7 @@ class SplashScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              PrimaryButton(
-                label: "Sign up with Google",
-                backgroundColor: AppColors.grey,
-                foregroundColor: AppColors.white,
-                onPressed: () {},
-              ),
+              const GoogleSignInButton(),
               const SizedBox(height: 12),
 
               PrimaryButton(
