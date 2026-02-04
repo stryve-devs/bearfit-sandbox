@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/program_model.dart';
 
 class ProgramCard extends StatelessWidget {
-  final dynamic program;
+  final ProgramModel program;
 
-  const ProgramCard({super.key, required this.program});
+  const ProgramCard({
+    super.key,
+    required this.program,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,25 +43,10 @@ class ProgramCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  program.subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.black.withOpacity(0.6),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${program.routines} routines',
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text(program.subtitle),
+                Text('${program.routines} routines'),
               ],
             ),
           ),

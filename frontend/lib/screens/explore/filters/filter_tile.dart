@@ -1,68 +1,54 @@
 import 'package:flutter/material.dart';
 
-class FilterTile extends StatefulWidget {
-  final String title;
-  final List<String> options;
-  final Function(List<String>) onSelectionChanged;
+class FilterTile extends StatelessWidget {
+  final String label;
+  final String icon;
+  final bool selected;
+  final VoidCallback onTap;
 
   const FilterTile({
     super.key,
-    required this.title,
-    required this.options,
-    required this.onSelectionChanged,
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
   });
 
   @override
-  State<FilterTile> createState() => _FilterTileState();
-}
-
-class _FilterTileState extends State<FilterTile> {
-  late List<String> selectedOptions = [];
-
-  @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected ? Colors.orange : Colors.transparent,
+            width: 1.5,
           ),
         ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: widget.options
-              .map(
-                (option) => FilterChip(
-                  label: Text(option),
-                  selected: selectedOptions.contains(option),
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        selectedOptions.add(option);
-                      } else {
-                        selectedOptions.remove(option);
-                      }
-                    });
-                    widget.onSelectionChanged(selectedOptions);
-                  },
-                  backgroundColor: const Color(0xFF1C1C1E),
-                  selectedColor: Colors.orange,
-                  labelStyle: TextStyle(
-                    color: selectedOptions.contains(option)
-                        ? Colors.white
-                        : Colors.grey,
-                  ),
-                ),
-              )
-              .toList(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              icon,
+              width: 28,
+              height: 28,
+              color: Colors.white,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.orange,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

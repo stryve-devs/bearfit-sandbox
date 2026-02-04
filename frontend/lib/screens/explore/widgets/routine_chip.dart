@@ -2,34 +2,53 @@ import 'package:flutter/material.dart';
 
 class RoutineChip extends StatelessWidget {
   final String title;
+  final int sets;
 
-  const RoutineChip({super.key, required this.title});
+  const RoutineChip({
+    super.key,
+    required this.title,
+    required this.sets,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final width = (MediaQuery.of(context).size.width - 56) / 2;
-
     return Container(
-      width: width,
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1E),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Column(
+      child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: Colors.black,
-            child: Icon(Icons.fitness_center, color: Colors.orange),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: Colors.orange.withOpacity(0.15),
+            child: const Icon(
+              Icons.fitness_center,
+              color: Colors.orange,
             ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$sets set${sets > 1 ? 's' : ''}',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ],
       ),
