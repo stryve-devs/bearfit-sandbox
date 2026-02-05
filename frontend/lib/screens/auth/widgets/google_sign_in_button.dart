@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../signup_screen.dart';
+import '../select_units_screen.dart';
 import '../auth_config.dart';
 
 class GoogleSignInButton extends StatelessWidget {
@@ -46,7 +46,7 @@ class GoogleSignInButton extends StatelessWidget {
 
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SignupScreen()),
+              MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),
             );
           } catch (e) {
             ScaffoldMessenger.of(context).showSnackBar(
