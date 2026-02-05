@@ -20,11 +20,7 @@ class GoogleSignInButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 12),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
           elevation: 0,
         ),
         onPressed: () async {
