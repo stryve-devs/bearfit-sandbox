@@ -25,7 +25,7 @@ class GoogleSignInButton extends StatelessWidget {
         ),
         onPressed: () async {
           final googleSignIn = kIsWeb
-              ? GoogleSignIn(clientId: googleWebClientId, scopes: ['email'])
+              ? GoogleSignIn(clientId: googleAndroidClientId, scopes: ['email'])
               : GoogleSignIn(scopes: ['email']);
           try {
             final account = await googleSignIn.signIn();
