@@ -2,11 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../signup_screen.dart';
 import '../auth_config.dart';
 
-class GoogleSignInButton extends StatelessWidget {
-  const GoogleSignInButton({super.key});
+class GoogleSignInSigninButton extends StatelessWidget {
+  const GoogleSignInSigninButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +27,7 @@ class GoogleSignInButton extends StatelessWidget {
               ? GoogleSignIn(clientId: googleAndroidClientId, scopes: ['email'])
               : GoogleSignIn(scopes: ['email']);
           try {
-            // Ensure account chooser shows each time for sign-up by signing out first
+            // Ensure account chooser shows each time for sign-in by signing out first
             try {
               await googleSignIn.signOut();
             } catch (_) {}
@@ -42,11 +41,6 @@ class GoogleSignInButton extends StatelessWidget {
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Signed in as ${account.email}')),
-            );
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SignupScreen()),
             );
           } catch (e) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +61,7 @@ class GoogleSignInButton extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             const Text(
-              'Sign up with Google',
+              'Sign in with Google',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
           ],

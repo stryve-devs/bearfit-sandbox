@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 
 import 'package:frontend/screens/auth/widgets/login_form.dart';
-import 'package:frontend/screens/auth/widgets/google_sign_in_button.dart';
+import 'package:frontend/screens/auth/widgets/google_sign_in_signin_button.dart';
 import 'package:frontend/screens/auth/widgets/apple_sign_in_button.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -49,7 +49,7 @@ class LoginScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 12),
-              const GoogleSignInButton(),
+              const GoogleSignInSigninButton(),
               const SizedBox(height: 8),
               const AppleSignInButton(),
 

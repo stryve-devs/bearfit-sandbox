@@ -7,6 +7,7 @@ import 'widgets/primary_button.dart';
 import 'terms_screen.dart';
 import 'select_units_screen.dart';
 import 'widgets/signup_info_dialog.dart';
+import 'widgets/google_sign_in_button.dart';
 
 class SignupScreen extends StatelessWidget {
   const SignupScreen({super.key});
@@ -111,6 +112,10 @@ class SignupScreen extends StatelessWidget {
                   );
                 },
               ),
+
+              const SizedBox(height: 16),
+              // Google sign-up button (kept as original)
+              const GoogleSignInButton(),
 
               const SizedBox(height: 30),
             ],
