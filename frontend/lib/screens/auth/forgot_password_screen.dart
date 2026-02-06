@@ -36,13 +36,13 @@ class ForgotPasswordScreen extends StatelessWidget {
 
               const AuthTextField(
                 label: "Email",
-                hint: "example@gmail.com",
+                hint: "",
               ),
 
               const SizedBox(height: 16),
 
               const Text(
-                "Enter your email above and if an account exists we will send you an email with a link to recover your password",
+                "We’ll send a password reset link if your account exists.",
                 style: TextStyle(
                   color: Color(0xFF9E9E9E),
                   fontSize: 13,

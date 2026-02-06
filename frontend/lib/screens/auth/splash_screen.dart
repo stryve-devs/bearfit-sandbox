@@ -21,26 +21,60 @@ class SplashScreen extends StatelessWidget {
               const GoogleSignUpButton(),
               const SizedBox(height: 12),
 
-              PrimaryButton(
-                label: "Sign up with Apple",
-                backgroundColor: AppColors.grey,
-                foregroundColor: AppColors.white,
-                onPressed: () {},
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2D2C2C),
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () {},
+                  icon: const Icon(Icons.apple, size: 35),
+                  label: const Text(
+                    'Sign up with Apple',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
 
-              PrimaryButton(
-                label: "Sign up with Email",
-                backgroundColor: AppColors.grey,
-                foregroundColor: AppColors.white,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SignupScreen(),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2D2C2C),
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  );
-                },
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SignupScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.mail, size: 35),
+                  label: const Text(
+                    'Sign up with Email',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 20),

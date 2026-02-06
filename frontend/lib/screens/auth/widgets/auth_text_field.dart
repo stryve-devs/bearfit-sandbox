@@ -38,6 +38,8 @@ class AuthTextField extends StatelessWidget {
   final Widget? suffix;
   final TextInputType keyboardType;
   final String? errorText;
+  final bool compact;
+  final bool useFloatingLabel;
 
   const AuthTextField({
     super.key,
@@ -48,6 +50,8 @@ class AuthTextField extends StatelessWidget {
     this.suffix,
     this.keyboardType = TextInputType.text,
     this.errorText,
+    this.compact = false,
+    this.useFloatingLabel = false,
   });
 
   @override
@@ -57,19 +61,33 @@ class AuthTextField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.white)),
-          const SizedBox(height: 6),
+          if (!useFloatingLabel) ...[
+            Text(label, style: const TextStyle(color: AppColors.white)),
+            const SizedBox(height: 6),
+          ],
           TextField(
             controller: controller,
             obscureText: obscureText,
             keyboardType: keyboardType,
-            style: const TextStyle(color: AppColors.white),
+            style: TextStyle(color: AppColors.white, fontSize: compact ? 14 : 16),
             decoration: InputDecoration(
               hintText: hint,
+              labelText: useFloatingLabel ? label : null,
+              labelStyle: useFloatingLabel ? const TextStyle(color: AppColors.grey) : null,
+              floatingLabelStyle: useFloatingLabel ? const TextStyle(color: AppColors.orange) : null,
               hintStyle: const TextStyle(color: AppColors.grey),
               suffixIcon: suffix,
+              suffixIconConstraints: BoxConstraints(
+                minWidth: compact ? 36 : 48,
+                minHeight: compact ? 36 : 48,
+              ),
+              isDense: compact,
               filled: true,
               fillColor: const Color(0xFF2D2C2C),
+              contentPadding: EdgeInsets.symmetric(
+                vertical: compact ? 10 : 16,
+                horizontal: 12,
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(

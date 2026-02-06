@@ -3,6 +3,7 @@ import 'package:frontend/constants/colors.dart';
 
 import 'auth_text_field.dart';
 import 'primary_button.dart';
+import '../forgot_password_screen.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -37,18 +38,22 @@ class _LoginFormState extends State<LoginForm> {
       children: [
         AuthTextField(
           label: 'Email',
-          hint: 'example@gmail.com',
+          hint: '',
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
+          compact: true,
+          useFloatingLabel: true,
         ),
 
         const SizedBox(height: 12),
 
         AuthTextField(
           label: 'Password',
-          hint: '••••••••',
+          hint: '',
           controller: _passwordController,
+          compact: true,
           obscureText: _obscurePassword,
+          useFloatingLabel: true,
           suffix: IconButton(
             icon: Icon(
               _obscurePassword
@@ -64,11 +69,36 @@ class _LoginFormState extends State<LoginForm> {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 2),
 
-        PrimaryButton(
-          label: 'Login',
-          onPressed: _onLogin,
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+              );
+            },
+            child: const Text(
+              'Forgot password?',
+              style: TextStyle(
+                color: AppColors.orange,
+                fontWeight: FontWeight.w400,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Padding(
+          padding: const EdgeInsets.only(top: 10.0),
+          child: PrimaryButton(
+            label: 'Login',
+            onPressed: _onLogin,
+          ),
         ),
       ],
     );

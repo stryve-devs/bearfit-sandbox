@@ -57,7 +57,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
 
                   AuthTextField(
                     label: "Username",
-                    hint: "username",
+                    hint: "",
                     controller: controller,
                     errorText: errorText,
                   ),

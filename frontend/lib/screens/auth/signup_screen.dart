@@ -7,7 +7,6 @@ import 'widgets/primary_button.dart';
 import 'terms_screen.dart';
 import 'select_units_screen.dart';
 import 'widgets/signup_info_dialog.dart';
-import 'widgets/google_sign_up_button.dart';
 
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -51,12 +50,16 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
+            IconButton(
             icon: const Icon(Icons.help_outline, color: AppColors.white),
             onPressed: () {
-              showDialog(
+              showGeneralDialog(
                 context: context,
-                builder: (_) => const SignupInfoDialog(),
+                barrierDismissible: true,
+                barrierLabel: 'SignupInfo',
+                barrierColor: Colors.black54,
+                transitionDuration: const Duration(milliseconds: 200),
+                pageBuilder: (ctx, anim1, anim2) => const SignupInfoDialog(),
               );
             },
           ),
@@ -68,47 +71,53 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12),
+              const SizedBox(height: 12),            
 
               const AuthTextField(
                 label: "Email",
-                hint: "example@gmail.com",
+                compact: true,
+                hint: "",
+                useFloatingLabel: true,
               ),
 
               const AuthTextField(
                 label: "Password",
-                hint: "minimum 6 characters",
+                hint: "••••••••",
+                compact: true,
                 obscureText: true,
+                useFloatingLabel: true,
               ),
 
               AuthTextField(
                 label: "Username",
-                hint: "username",
+                hint: "",
                 controller: usernameController,
                 errorText: usernameError,
+                compact: true,
+                useFloatingLabel: true,
               ),
+              const SizedBox(height: 8),
 
-              const SizedBox(height: 10),
-
-              Center(
+              SizedBox(
+                width: double.infinity,
                 child: Wrap(
                   alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
                   children: [
                     const Text(
-                      "By clicking continue, you agree to our ",
-                      style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 12),
+                      'By continuing you agree to our',
+                      style: TextStyle(color: AppColors.white, fontSize: 12),
                     ),
-                    GestureDetector(
-                      onTap: () {
+                    TextButton(
+                      onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const TermsScreen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const TermsScreen()),
                         );
                       },
                       child: const Text(
-                        "Terms of Service",
+                        'Terms of Service',
                         style: TextStyle(
                           color: AppColors.orange,
                           fontSize: 12,
@@ -157,10 +166,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   );
                 },
               ),
-
-              const SizedBox(height: 16),
-              // Google sign-up button (kept as original)
-              const GoogleSignUpButton(),
 
               const SizedBox(height: 30),
             ],

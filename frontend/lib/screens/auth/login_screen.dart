@@ -24,25 +24,17 @@ class LoginScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Center(
+      body: Align(
+        alignment: const Alignment(0, -0.85),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Sign in to your account',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               const LoginForm(),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 15),
               const Text(
                 'Or continue with',
                 style: TextStyle(color: AppColors.grey),
