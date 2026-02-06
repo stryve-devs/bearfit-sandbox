@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, refresh, googleAuth } from "../controllers/authController";
+import { register, login, refresh, googleAuth, checkEmailExists } from "../controllers/authController";
 import { authRateLimiter } from "../middlewares/rateLimitMiddleware";
 import { validateRequest } from "../middlewares/validationMiddleware";
 import { idempotencyMiddleware } from "../middlewares/idempotencyMiddleware";
@@ -23,5 +23,8 @@ router.post("/refresh", refresh);
 
 // POST /auth/google - Google ID token sign-in
 router.post("/google", idempotencyMiddleware, validateRequest(googleAuthSchema), googleAuth);
+
+// GET /auth/exists?email=... - check whether email is already registered
+router.get('/exists', checkEmailExists);
 
 export default router;

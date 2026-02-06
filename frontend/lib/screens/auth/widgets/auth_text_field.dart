@@ -37,6 +37,7 @@ class AuthTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffix;
   final TextInputType keyboardType;
+  final String? errorText;
 
   const AuthTextField({
     super.key,
@@ -46,6 +47,7 @@ class AuthTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffix,
     this.keyboardType = TextInputType.text,
+    this.errorText,
   });
 
   @override
@@ -68,12 +70,35 @@ class AuthTextField extends StatelessWidget {
               suffixIcon: suffix,
               filled: true,
               fillColor: const Color(0xFF2D2C2C),
-              border: OutlineInputBorder(
+              enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
+                borderSide: BorderSide(
+                  color: errorText != null ? Colors.red : Colors.transparent,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: errorText != null ? Colors.red : AppColors.orange,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.red),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.red),
               ),
             ),
           ),
+          if (errorText != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              errorText!,
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ],
         ],
       ),
     );

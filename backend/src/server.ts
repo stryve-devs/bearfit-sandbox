@@ -28,9 +28,10 @@ const start = async () => {
     // Start background jobs
     startPurgeJob();
 
-    // Start server
-    app.listen(PORT, () => {
-        console.log(`Server is running at http://localhost:${PORT}`);
+    // Start server and bind to 0.0.0.0 so it is reachable from other devices on the LAN
+    const HOST = process.env.HOST || '0.0.0.0';
+    app.listen(PORT, HOST, () => {
+        console.log(`Server is running at http://${HOST}:${PORT}`);
     });
 };
 

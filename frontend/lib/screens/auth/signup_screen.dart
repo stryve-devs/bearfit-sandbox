@@ -7,10 +7,29 @@ import 'widgets/primary_button.dart';
 import 'terms_screen.dart';
 import 'select_units_screen.dart';
 import 'widgets/signup_info_dialog.dart';
-import 'widgets/google_sign_in_button.dart';
+import 'widgets/google_sign_up_button.dart';
 
-class SignupScreen extends StatelessWidget {
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'auth_config.dart';
+
+class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
+
+  @override
+  State<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends State<SignupScreen> {
+  final TextEditingController usernameController = TextEditingController();
+  String? usernameError;
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,9 +81,11 @@ class SignupScreen extends StatelessWidget {
                 obscureText: true,
               ),
 
-              const AuthTextField(
+              AuthTextField(
                 label: "Username",
                 hint: "username",
+                controller: usernameController,
+                errorText: usernameError,
               ),
 
               const SizedBox(height: 10),
@@ -103,7 +124,31 @@ class SignupScreen extends StatelessWidget {
 
               PrimaryButton(
                 label: "Continue",
-                onPressed: () {
+                onPressed: () async {
+                  setState(() => usernameError = null);
+                  final username = usernameController.text.trim();
+                  if (username.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter a username')),
+                    );
+                    return;
+                  }
+
+                  bool exists = false;
+                  try {
+                    final uri = Uri.parse('$backendHost/api/username/exists?username=${Uri.encodeComponent(username)}');
+                    final resp = await http.get(uri, headers: {'Content-Type': 'application/json'});
+                    if (resp.statusCode == 200) {
+                      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+                      exists = body['exists'] == true;
+                    }
+                  } catch (_) {}
+
+                  if (exists) {
+                    setState(() => usernameError = 'A user with that username already exists.');
+                    return;
+                  }
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -115,7 +160,7 @@ class SignupScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
               // Google sign-up button (kept as original)
-              const GoogleSignInButton(),
+              const GoogleSignUpButton(),
 
               const SizedBox(height: 30),
             ],
