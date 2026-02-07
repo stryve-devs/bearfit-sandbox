@@ -3,18 +3,29 @@ description: A Flutter frontend replacing the previous React Native app.
 publish_to: "none"
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
+  flutter_svg: ^2.2.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
 flutter:
+  # CRITICAL: enables Material Icons on web/Android
   uses-material-design: true
-  assets:
-    - assets/images/
+
+  # Quicksand (variable font used for all weights)
+  fonts:
+    - family: Quicksand
+      fonts:
+        - asset: assets/fonts/Quicksand-VariableFont_wght.ttf
+          weight: 400
+        - asset: assets/fonts/Quicksand-VariableFont_wght.ttf
+          weight: 600
+        - asset: assets/fonts/Quicksand-VariableFont_wght.ttf
+          weight: 700
