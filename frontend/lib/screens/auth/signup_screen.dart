@@ -6,6 +6,7 @@ import 'widgets/primary_button.dart';
 
 import 'terms_screen.dart';
 import 'select_units_screen.dart';
+import 'email_otp_screen.dart';
 import 'widgets/signup_info_dialog.dart';
 
 import 'package:http/http.dart' as http;
@@ -39,6 +40,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void initState() {
     super.initState();
+    emailController.addListener(_onEmailChanged);
     passwordController.addListener(_onPasswordChanged);
     passwordFocusNode = FocusNode();
     passwordFocusNode.addListener(() { if (mounted) setState(() {}); });
@@ -49,6 +51,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
+    emailController.removeListener(_onEmailChanged);
     emailController.dispose();
     passwordController.removeListener(_onPasswordChanged);
     passwordController.dispose();
@@ -60,6 +63,21 @@ class _SignupScreenState extends State<SignupScreen> {
     _usernameDebounce?.cancel();
     usernameController.dispose();
     super.dispose();
+  }
+
+  void _onEmailChanged() {
+    if (!mounted) return;
+    // Only auto-clear the inline error once the email becomes valid.
+    if (emailError != null) {
+      final email = emailController.text.trim();
+      final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+      if (email.isNotEmpty && emailRegex.hasMatch(email)) {
+        setState(() => emailError = null);
+      } else {
+        // keep showing the error until it's valid; trigger a rebuild to keep the red border
+        setState(() {});
+      }
+    }
   }
 
   void _onPasswordChanged() {
@@ -470,7 +488,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const SelectUnitsScreen(),
+                      builder: (_) => EmailOtpScreen(email: email),
                     ),
                   );
                 },
