@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, refresh, googleAuth, checkEmailExists } from "../controllers/authController";
+import { register, login, refresh, googleAuth, checkEmailExists, sendOtp, verifyOtp } from "../controllers/authController";
 import { authRateLimiter } from "../middlewares/rateLimitMiddleware";
 import { validateRequest } from "../middlewares/validationMiddleware";
 import { idempotencyMiddleware } from "../middlewares/idempotencyMiddleware";
@@ -26,5 +26,11 @@ router.post("/google", idempotencyMiddleware, validateRequest(googleAuthSchema),
 
 // GET /auth/exists?email=... - check whether email is already registered
 router.get('/exists', checkEmailExists);
+
+// POST /auth/send-otp - send a one-time code to email
+router.post('/send-otp', sendOtp);
+
+// POST /auth/verify-otp - verify provided code
+router.post('/verify-otp', verifyOtp);
 
 export default router;

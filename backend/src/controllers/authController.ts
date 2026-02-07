@@ -5,6 +5,7 @@ import {
   refreshAccessToken,
 } from "../services/authService";
 import { googleSignIn } from "../services/authService";
+import otpService from '../services/otpService';
 
 /* =======================
    REGISTER
@@ -131,5 +132,49 @@ export const checkEmailExists = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('checkEmailExists error', error);
     return res.status(500).json({ message: 'Failed to check email' });
+  }
+};
+
+/* =======================
+   SEND OTP
+   POST /auth/send-otp { email }
+======================= */
+export const sendOtp = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'email is required' });
+
+    await otpService.sendOtpToEmail(String(email).trim());
+    return res.status(200).json({ message: 'OTP sent' });
+  } catch (error: any) {
+    if (error.message === 'email_not_configured') {
+      return res.status(500).json({ message: 'Email service not configured on server' });
+    }
+    if (error.message === 'email_auth_error') {
+      return res.status(500).json({ message: 'Email SMTP authentication failed (check EMAIL_USER/EMAIL_PASS).' });
+    }
+    if (error.message === 'email_send_failed') {
+      return res.status(500).json({ message: 'Failed to send OTP email' });
+    }
+    console.error('sendOtp error', error);
+    return res.status(500).json({ message: 'Failed to send OTP' });
+  }
+};
+
+/* =======================
+   VERIFY OTP
+   POST /auth/verify-otp { email, code }
+======================= */
+export const verifyOtp = async (req: Request, res: Response) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ message: 'email and code are required' });
+
+    const ok = await otpService.verifyOtpForEmail(String(email).trim(), String(code).trim());
+    if (!ok) return res.status(400).json({ message: 'Invalid or expired code' });
+    return res.status(200).json({ message: 'OTP verified' });
+  } catch (error: any) {
+    console.error('verifyOtp error', error);
+    return res.status(500).json({ message: 'Failed to verify OTP' });
   }
 };
