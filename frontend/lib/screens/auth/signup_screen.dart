@@ -236,22 +236,18 @@ class _SignupScreenState extends State<SignupScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        centerTitle: true,
         actions: [
-            IconButton(
+          IconButton(
             icon: const Icon(Icons.help_outline, color: AppColors.white),
             onPressed: () {
-              showGeneralDialog(
+              showDialog(
                 context: context,
-                barrierDismissible: true,
-                barrierLabel: 'SignupInfo',
-                barrierColor: Colors.black54,
-                transitionDuration: const Duration(milliseconds: 200),
-                pageBuilder: (ctx, anim1, anim2) => const SignupInfoDialog(),
+                builder: (_) => const SignupInfoDialog(),
               );
             },
           ),
         ],
+        centerTitle: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -259,8 +255,6 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12),            
-
               AuthTextField(
                 label: "Name",
                 hint: "",
@@ -710,10 +704,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     context,
                     MaterialPageRoute(
                       builder: (_) => EmailOtpScreen(
-                        name: name,
                         email: email,
-                        password: password,
+                        name: name,
                         username: username,
+                        password: password,
                       ),
                     ),
                   );

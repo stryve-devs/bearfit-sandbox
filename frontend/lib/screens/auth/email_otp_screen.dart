@@ -1,37 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'widgets/primary_button.dart';
 import 'select_units_screen.dart';
-// Network calls removed per request: OTP flows are local-only
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'auth_config.dart';
 
 class EmailOtpScreen extends StatefulWidget {
-  final String name;
   final String email;
-  final String password;
+  final String name;
   final String username;
-  const EmailOtpScreen({
-    super.key,
-    required this.name,
-    required this.email,
-    required this.password,
-    required this.username,
-  });
+  final String password;
+  const EmailOtpScreen({super.key, required this.email, required this.name, required this.username, required this.password});
 
   @override
   State<EmailOtpScreen> createState() => _EmailOtpScreenState();
 }
 
 class _EmailOtpScreenState extends State<EmailOtpScreen> {
+  bool _isSubmitting = false;
   final List<TextEditingController> _controllers = List.generate(5, (_) => TextEditingController());
   final List<FocusNode> _nodes = List.generate(5, (_) => FocusNode());
   Timer? _resendTimer;
   int _resendSecondsRemaining = 60;
   bool _canResend = false;
-  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -171,14 +164,16 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
             const Spacer(),
 
             PrimaryButton(
-              label: 'Verify',
-              onPressed: _controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting
+              label: _isSubmitting ? 'Verifying...' : 'Verify',
+              onPressed: (_controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting)
                   ? () async {
+                      final code = _otp;
                       setState(() => _isSubmitting = true);
                       try {
-                        final uri = Uri.parse('$backendHost/api/auth/register');
-                        final resp = await http.post(
-                          uri,
+                        // Register user directly (skip OTP verification for now)
+                        final regUri = Uri.parse('$backendHost/api/auth/register');
+                        final regResp = await http.post(
+                          regUri,
                           headers: {'Content-Type': 'application/json'},
                           body: jsonEncode({
                             'name': widget.name,
@@ -188,42 +183,26 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                           }),
                         );
 
-                        if (resp.statusCode < 200 || resp.statusCode >= 300) {
-                          String message = 'Registration failed.';
-                          try {
-                            final body = jsonDecode(resp.body) as Map<String, dynamic>;
-                            if (body['message'] is String) message = body['message'] as String;
-                          } catch (_) {}
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(message)),
-                            );
-                          }
+                        if (regResp.statusCode != 201) {
+                          final msg = (regResp.body.isNotEmpty) ? jsonDecode(regResp.body)['message'] ?? 'Registration failed' : 'Registration failed';
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                          setState(() => _isSubmitting = false);
                           return;
                         }
 
-                        if (!mounted) return;
+                        // Success: navigate to next screen
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),
                         );
-                      } catch (_) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Registration failed. Please try again.')),
-                          );
-                        }
-                      } finally {
-                        if (mounted) setState(() => _isSubmitting = false);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Network error')));
+                        setState(() => _isSubmitting = false);
                       }
                     }
                   : null,
-              backgroundColor: _controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting
-                  ? null
-                  : const Color(0xFF555555),
-              foregroundColor: _controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting
-                  ? null
-                  : Colors.white,
+              backgroundColor: (_controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting) ? null : const Color(0xFF555555),
+              foregroundColor: (_controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting) ? null : Colors.white,
             ),
             const SizedBox(height: 8),
           ],

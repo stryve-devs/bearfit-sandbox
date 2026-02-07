@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../auth/auth_config.dart';
+import '../workout_screen.dart';
 
 import 'auth_text_field.dart';
 import 'primary_button.dart';
@@ -25,11 +29,64 @@ class _LoginFormState extends State<LoginForm> {
     super.dispose();
   }
 
-  void _onLogin() {
+  Future<void> _onLogin() async {
     FocusScope.of(context).unfocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Login pressed')),
-    );
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter email and password')));
+      return;
+    }
+
+    try {
+      // 1) Check email exists
+      final existsUri = Uri.parse('$backendHost/api/auth/exists?email=${Uri.encodeComponent(email)}');
+      final existsResp = await http.get(existsUri, headers: {'Content-Type': 'application/json'});
+      if (existsResp.statusCode != 200) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to check email')));
+        return;
+      }
+      final existsBody = jsonDecode(existsResp.body) as Map<String, dynamic>;
+      final exists = existsBody['exists'] == true;
+      if (!exists) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email does not exist')));
+        return;
+      }
+
+      // 2) Attempt login
+      final loginUri = Uri.parse('$backendHost/api/auth/login');
+      final loginResp = await http.post(
+        loginUri,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      if (loginResp.statusCode == 200) {
+        // Success -> navigate to WorkoutScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const WorkoutScreen()),
+        );
+        return;
+      }
+
+      // Handle known errors
+      if (loginResp.statusCode == 401) {
+        final body = (loginResp.body.isNotEmpty) ? jsonDecode(loginResp.body) : null;
+        final msg = body != null && body['message'] != null ? body['message'] : 'Wrong password';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        return;
+      }
+
+      // Other failures
+      final body = (loginResp.body.isNotEmpty) ? jsonDecode(loginResp.body) : null;
+      final msg = body != null && body['message'] != null ? body['message'] : 'Login failed';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Network error')));
+    }
   }
 
   @override

@@ -15,4 +15,4 @@
 const String googleAndroidClientId = '863592591549-79r5fj14cduf6dr98310lesoi3gj8k19.apps.googleusercontent.com';
 
 // Backend host reachable from device. This value is copied from backend/.env
-const String backendHost = "http://192.168.0.127:3000";
+const String backendHost = "http://192.168.0.130:3000";

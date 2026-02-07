@@ -66,9 +66,17 @@ interface LoginInput {
 export const loginUser = async (data: LoginInput) => {
   const { email, password } = data;
 
-  // 1️⃣ Find user
+  // 1️⃣ Find user (select only needed fields to avoid enum conversion issues)
   const user = await prisma.users.findUnique({
     where: { email },
+    select: {
+      user_id: true,
+      name: true,
+      email: true,
+      username: true,
+      password_hash: true,
+      is_active: true,
+    },
   });
 
   if (!user || !user.is_active) {
@@ -89,7 +97,9 @@ export const loginUser = async (data: LoginInput) => {
   const payload: JwtPayload = {
     userId: user.user_id,
     email: user.email,
-    role: user.role,
+    // DB role column is currently stored as a DB enum which isn't mapped in the Prisma schema.
+    // Use a safe default role here until the schema/DB are aligned.
+    role: 'USER',
   };
 
   // 4️⃣ Generate tokens
@@ -116,7 +126,7 @@ export const loginUser = async (data: LoginInput) => {
       name: user.name,
       email: user.email,
       username: user.username,
-      role: user.role,
+      role: 'USER',
     },
   };
 };
@@ -200,7 +210,7 @@ export const googleSignIn = async (idToken: string) => {
   // find or create user (select only necessary fields to keep types consistent)
   let user = await prisma.users.findUnique({
     where: { email },
-    select: { user_id: true, name: true, email: true, username: true, role: true },
+    select: { user_id: true, name: true, email: true, username: true },
   });
   if (!user) {
     const randomPassword = Math.random().toString(36) + Date.now().toString(36);
@@ -217,7 +227,6 @@ export const googleSignIn = async (idToken: string) => {
         email: true,
         username: true,
         created_at: true,
-        role: true,
       },
     });
   }
@@ -225,7 +234,7 @@ export const googleSignIn = async (idToken: string) => {
   const payloadJwt: JwtPayload = {
     userId: user.user_id,
     email: user.email,
-    role: user.role,
+    role: 'USER',
   };
 
   const accessToken = generateAccessToken(payloadJwt);
@@ -247,7 +256,7 @@ export const googleSignIn = async (idToken: string) => {
       name: user.name,
       email: user.email,
       username: user.username,
-      role: user.role,
+      role: 'USER',
     },
   };
 };

@@ -2,7 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 
 class SignupInfoDialog extends StatelessWidget {
-  const SignupInfoDialog({super.key});
+  final String title;
+  final String message;
+  final String buttonText;
+  final double? titleFontSize;
+  final double? messageFontSize;
+  final double? buttonFontSize;
+  final EdgeInsetsGeometry? buttonPadding;
+
+  const SignupInfoDialog({
+    super.key,
+    this.title = 'Why we ask this?',
+    this.message = 'We use your details only to personalize your fitness experience. Your data is safe and never shared.',
+    this.buttonText = 'Got it',
+    this.titleFontSize,
+    this.messageFontSize,
+    this.buttonFontSize,
+    this.buttonPadding,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,17 +49,16 @@ class SignupInfoDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
-                'Why we ask this?',
+              Text(
+                title,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.orange, fontWeight: FontWeight.w700, fontSize: 20),
+                style: TextStyle(color: AppColors.orange, fontWeight: FontWeight.w700, fontSize: titleFontSize ?? 20),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'We use your details only to personalize your fitness experience. '
-                'Your data is safe and never shared.',
+              Text(
+                message,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w400),
+                style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w400, fontSize: messageFontSize ?? 14),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -51,14 +67,14 @@ class SignupInfoDialog extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3A3A3A),
                     foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: buttonPadding ?? const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     elevation: 0,
                   ),
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Got it'),
+                  child: Text(buttonText, style: TextStyle(fontSize: buttonFontSize)),
                 ),
               ),
             ],

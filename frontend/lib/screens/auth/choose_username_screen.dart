@@ -21,6 +21,11 @@ class ChooseUsernameScreen extends StatefulWidget {
 
 class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
   final TextEditingController controller = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  String? nameError;
+  bool nameTouched = false;
+  late FocusNode nameFocusNode;
+  bool showNameCriteria = false;
   String? errorText;
   late FocusNode usernameFocusNode;
   bool showUsernameCriteria = false;
@@ -30,6 +35,10 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
 
   @override
   void dispose() {
+    nameController.removeListener(_onNameChanged);
+    nameController.dispose();
+    nameFocusNode.removeListener(() { if (mounted) setState(() {}); });
+    nameFocusNode.dispose();
     controller.removeListener(_onUsernameChanged);
     usernameFocusNode.removeListener(() { if (mounted) setState(() {}); });
     usernameFocusNode.dispose();
@@ -41,9 +50,20 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
   @override
   void initState() {
     super.initState();
+    nameController.addListener(_onNameChanged);
+    nameFocusNode = FocusNode();
+    nameFocusNode.addListener(() { if (mounted) setState(() {}); });
     usernameFocusNode = FocusNode();
     usernameFocusNode.addListener(() { if (mounted) setState(() {}); });
     controller.addListener(_onUsernameChanged);
+  }
+
+  void _onNameChanged() {
+    if (!mounted) return;
+    nameTouched = nameController.text.trim().isNotEmpty;
+    if (nameError != null) nameError = null;
+    if (showNameCriteria) showNameCriteria = false;
+    setState(() {});
   }
 
   void _onUsernameChanged() {
@@ -75,11 +95,15 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
   @override
   Widget build(BuildContext context) {
     final uname = controller.text.trim();
+    final name = nameController.text.trim();
+    final nameRegex = RegExp(r'^[A-Za-z]+$');
+    final nameOk = name.isNotEmpty && nameRegex.hasMatch(name);
     final lengthOk = uname.length >= 6 && uname.length <= 15;
     final allowed = RegExp(r'^[A-Za-z0-9_.-]+$');
     final charsOk = uname.isNotEmpty && allowed.hasMatch(uname);
-    final isUsernameReady = lengthOk && charsOk && usernameAvailable == true;
     final bool usernameInvalid = !lengthOk || !charsOk || usernameAvailable == false;
+    final bool isFormReady = nameOk && (lengthOk && charsOk && usernameAvailable == true);
+    final String? nameBorderError = nameError ?? ((nameTouched && !nameOk) ? '' : null);
     final String? usernameBorderError = errorText ?? ((usernameTouched && usernameInvalid) ? '' : null);
     final bool isCheckingUsername = uname.isNotEmpty && lengthOk && charsOk && usernameAvailable == null;
 
@@ -107,6 +131,64 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 12),
+
+              AuthTextField(
+                label: "Name",
+                hint: "",
+                controller: nameController,
+                focusNode: nameFocusNode,
+                errorText: nameBorderError,
+                compact: true,
+                useFloatingLabel: true,
+              ),
+
+              Builder(builder: (context) {
+                final showCriteria = nameFocusNode.hasFocus || nameError != null || showNameCriteria;
+                if (!showCriteria) return const SizedBox.shrink();
+
+                final invalidChars = <String>{};
+                for (final r in name.runes) {
+                  final ch = String.fromCharCode(r);
+                  if (RegExp(r'[A-Za-z]').hasMatch(ch)) continue;
+                  invalidChars.add(ch);
+                }
+
+                Widget row(bool ok, String text) => Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(ok ? Icons.check_circle : Icons.cancel,
+                            size: 16, color: ok ? Colors.green : Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            text,
+                            softWrap: true,
+                            style: TextStyle(
+                                color: ok ? Colors.green : Colors.red,
+                                fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    );
+
+                return Padding(
+                  padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    if (invalidChars.isNotEmpty) ...[
+                      Row(children: [
+                        const Icon(Icons.cancel, size: 16, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text('Invalid character(s): ${invalidChars.join(' ')}',
+                            style: const TextStyle(color: Colors.red, fontSize: 12)),
+                      ]),
+                      const SizedBox(height: 8),
+                    ],
+                    row(nameOk, 'Only letters (A-Z, a-z)'),
+                  ]),
+                );
+              }),
+
               const SizedBox(height: 12),
 
               AuthTextField(
@@ -195,7 +277,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
 
               PrimaryButton(
                 label: "Continue",
-                onPressed: isUsernameReady
+                onPressed: isFormReady
                     ? () async {
                   setState(() => errorText = null);
                   final username = controller.text.trim();
@@ -253,7 +335,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                     : null,
               ),
 
-              if (!isUsernameReady && uname.isNotEmpty)
+              if (!isFormReady && (uname.isNotEmpty || name.isNotEmpty))
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
