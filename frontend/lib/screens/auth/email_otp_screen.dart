@@ -4,10 +4,22 @@ import 'dart:async';
 import 'widgets/primary_button.dart';
 import 'select_units_screen.dart';
 // Network calls removed per request: OTP flows are local-only
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'auth_config.dart';
 
 class EmailOtpScreen extends StatefulWidget {
+  final String name;
   final String email;
-  const EmailOtpScreen({super.key, required this.email});
+  final String password;
+  final String username;
+  const EmailOtpScreen({
+    super.key,
+    required this.name,
+    required this.email,
+    required this.password,
+    required this.username,
+  });
 
   @override
   State<EmailOtpScreen> createState() => _EmailOtpScreenState();
@@ -19,12 +31,19 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
   Timer? _resendTimer;
   int _resendSecondsRemaining = 60;
   bool _canResend = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
-    for (final n in _nodes) n.dispose();
-    for (final c in _controllers) c.removeListener(_onOtpControllersChanged);
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final n in _nodes) {
+      n.dispose();
+    }
+    for (final c in _controllers) {
+      c.removeListener(_onOtpControllersChanged);
+    }
     _resendTimer?.cancel();
     super.dispose();
   }
@@ -107,9 +126,9 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
-            Text('Enter the 5-digit code sent to', style: TextStyle(color: AppColors.white)),
+            const Text('Enter the 5-digit code sent to', style: TextStyle(color: AppColors.white)),
             const SizedBox(height: 6),
-            Text(widget.email, style: TextStyle(color: AppColors.orange, fontWeight: FontWeight.w600)),
+            Text(widget.email, style: const TextStyle(color: AppColors.orange, fontWeight: FontWeight.w600)),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,17 +172,58 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
 
             PrimaryButton(
               label: 'Verify',
-              onPressed: _controllers.every((c) => c.text.trim().length == 1)
-                  ? () {
-                      // Local verification: no backend call — proceed to next screen
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),
-                      );
+              onPressed: _controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting
+                  ? () async {
+                      setState(() => _isSubmitting = true);
+                      try {
+                        final uri = Uri.parse('$backendHost/api/auth/register');
+                        final resp = await http.post(
+                          uri,
+                          headers: {'Content-Type': 'application/json'},
+                          body: jsonEncode({
+                            'name': widget.name,
+                            'email': widget.email,
+                            'password': widget.password,
+                            'username': widget.username,
+                          }),
+                        );
+
+                        if (resp.statusCode < 200 || resp.statusCode >= 300) {
+                          String message = 'Registration failed.';
+                          try {
+                            final body = jsonDecode(resp.body) as Map<String, dynamic>;
+                            if (body['message'] is String) message = body['message'] as String;
+                          } catch (_) {}
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(message)),
+                            );
+                          }
+                          return;
+                        }
+
+                        if (!mounted) return;
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),
+                        );
+                      } catch (_) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Registration failed. Please try again.')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) setState(() => _isSubmitting = false);
+                      }
                     }
                   : null,
-              backgroundColor: _controllers.every((c) => c.text.trim().length == 1) ? null : const Color(0xFF555555),
-              foregroundColor: _controllers.every((c) => c.text.trim().length == 1) ? null : Colors.white,
+              backgroundColor: _controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting
+                  ? null
+                  : const Color(0xFF555555),
+              foregroundColor: _controllers.every((c) => c.text.trim().length == 1) && !_isSubmitting
+                  ? null
+                  : Colors.white,
             ),
             const SizedBox(height: 8),
           ],

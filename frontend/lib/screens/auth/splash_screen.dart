@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
-import 'package:frontend/screens/auth/widgets/primary_button.dart';
 import 'widgets/google_sign_up_button.dart';
 import 'signup_screen.dart';
 import 'login_screen.dart';

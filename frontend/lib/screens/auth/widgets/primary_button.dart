@@ -21,17 +21,17 @@ class PrimaryButton extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton(
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.disabled)) return backgroundColor ?? const Color(0xFF666666);
+          backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (states.contains(WidgetState.disabled)) return backgroundColor ?? const Color(0xFF666666);
             return backgroundColor ?? AppColors.orange;
           }),
-          foregroundColor: MaterialStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(MaterialState.disabled)) return foregroundColor ?? Colors.white;
+          foregroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (states.contains(WidgetState.disabled)) return foregroundColor ?? Colors.white;
             return foregroundColor ?? Colors.black;
           }),
-          padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 14)),
-          shape: MaterialStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-          elevation: MaterialStateProperty.all(0),
+          padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: 14)),
+          shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+          elevation: WidgetStateProperty.all(0),
         ),
         onPressed: onPressed,
         child: Text(

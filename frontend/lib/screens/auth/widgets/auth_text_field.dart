@@ -81,8 +81,8 @@ class AuthTextField extends StatelessWidget {
               hintStyle: const TextStyle(color: AppColors.grey),
               suffixIcon: suffix,
               suffixIconConstraints: BoxConstraints(
-                minWidth: compact ? 36 : 48,
-                minHeight: compact ? 36 : 48,
+                minWidth: compact ? 24 : 40,
+                minHeight: compact ? 24 : 40,
               ),
               isDense: compact,
               filled: true,
@@ -94,30 +94,30 @@ class AuthTextField extends StatelessWidget {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: errorText != null ? Colors.red : Colors.transparent,
+                  color: errorText != null ? const Color(0xFFD22B2B) : Colors.transparent,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: errorText != null ? Colors.red : AppColors.orange,
+                  color: errorText != null ? const Color(0xFFD22B2B) : AppColors.orange,
                 ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.red),
+                borderSide: const BorderSide(color: Color(0xFFD22B2B)),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.red),
+                borderSide: const BorderSide(color: Color(0xFFD22B2B)),
               ),
             ),
           ),
-          if (errorText != null) ...[
+          if (errorText != null && errorText!.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               errorText!,
-              style: const TextStyle(color: Colors.red, fontSize: 12),
+              style: const TextStyle(color: Color(0xFFD22B2B), fontSize: 12),
             ),
           ],
         ],

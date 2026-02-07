@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:frontend/constants/colors.dart';
 
 import 'widgets/auth_text_field.dart';
@@ -23,6 +24,11 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final TextEditingController nameController = TextEditingController();
+  String? nameError;
+  bool nameTouched = false;
+  late FocusNode nameFocusNode;
+  bool showNameCriteria = false;
   final TextEditingController usernameController = TextEditingController();
   String? usernameError;
   late FocusNode usernameFocusNode;
@@ -31,15 +37,24 @@ class _SignupScreenState extends State<SignupScreen> {
   Timer? _usernameDebounce;
   final TextEditingController emailController = TextEditingController();
   String? emailError;
+  bool emailTouched = false;
+  bool? emailAvailable;
+  Timer? _emailDebounce;
+  bool emailCheckFailed = false;
   final TextEditingController passwordController = TextEditingController();
   String? passwordError;
+  bool passwordTouched = false;
   late FocusNode passwordFocusNode;
   bool _obscurePassword = true;
   bool showPasswordCriteria = false;
+  bool usernameTouched = false;
 
   @override
   void initState() {
     super.initState();
+    nameController.addListener(_onNameChanged);
+    nameFocusNode = FocusNode();
+    nameFocusNode.addListener(() { if (mounted) setState(() {}); });
     emailController.addListener(_onEmailChanged);
     passwordController.addListener(_onPasswordChanged);
     passwordFocusNode = FocusNode();
@@ -51,8 +66,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
+    nameController.removeListener(_onNameChanged);
+    nameController.dispose();
+    nameFocusNode.removeListener(() { if (mounted) setState(() {}); });
+    nameFocusNode.dispose();
     emailController.removeListener(_onEmailChanged);
     emailController.dispose();
+    _emailDebounce?.cancel();
     passwordController.removeListener(_onPasswordChanged);
     passwordController.dispose();
     passwordFocusNode.removeListener(() { if (mounted) setState(() {}); });
@@ -65,23 +85,57 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
+  void _onNameChanged() {
+    if (!mounted) return;
+    nameTouched = nameController.text.trim().isNotEmpty;
+    if (nameError != null) nameError = null;
+    if (showNameCriteria) showNameCriteria = false;
+    setState(() {});
+  }
+
   void _onEmailChanged() {
     if (!mounted) return;
+    final email = emailController.text.trim();
+    emailTouched = email.isNotEmpty;
+    emailAvailable = null;
+    emailCheckFailed = false;
     // Only auto-clear the inline error once the email becomes valid.
     if (emailError != null) {
-      final email = emailController.text.trim();
       final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
       if (email.isNotEmpty && emailRegex.hasMatch(email)) {
-        setState(() => emailError = null);
-      } else {
-        // keep showing the error until it's valid; trigger a rebuild to keep the red border
-        setState(() {});
+        emailError = null;
       }
     }
+    setState(() {});
+
+    _emailDebounce?.cancel();
+    _emailDebounce = Timer(const Duration(milliseconds: 700), () async {
+      final value = emailController.text.trim();
+      final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+      if (!value.isNotEmpty || !emailRegex.hasMatch(value)) {
+        if (mounted) setState(() => emailCheckFailed = false);
+        return;
+      }
+      try {
+        final uri = Uri.parse('$backendHost/api/auth/exists?email=${Uri.encodeComponent(value)}');
+        final resp = await http
+            .get(uri, headers: {'Content-Type': 'application/json'})
+            .timeout(const Duration(seconds: 5));
+        if (resp.statusCode == 200) {
+          final body = jsonDecode(resp.body) as Map<String, dynamic>;
+          if (mounted) setState(() => emailAvailable = !(body['exists'] == true));
+        } else {
+          if (mounted) setState(() => emailCheckFailed = true);
+        }
+      } catch (_) {
+        if (mounted) setState(() => emailCheckFailed = true);
+      }
+    });
   }
 
   void _onPasswordChanged() {
     if (mounted) {
+      passwordTouched = passwordController.text.isNotEmpty;
       // clear the inline error when user starts editing
       if (passwordError != null) passwordError = null;
       if (showPasswordCriteria) showPasswordCriteria = false;
@@ -91,6 +145,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _onUsernameChanged() {
     if (mounted) {
+      usernameTouched = usernameController.text.trim().isNotEmpty;
       if (usernameError != null) usernameError = null;
       usernameAvailable = null;
       // hide criteria when typing unless explicitly shown
@@ -118,6 +173,53 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final username = usernameController.text.trim();
+    final password = passwordController.text;
+
+    final nameRegex = RegExp(r'^[A-Za-z]+$');
+    final nameOk = name.isNotEmpty && nameRegex.hasMatch(name);
+
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    final emailOk = email.isNotEmpty && emailRegex.hasMatch(email);
+
+    final pwdLengthOk = password.length >= 8 && password.length <= 32;
+    final hasUpper = RegExp(r'[A-Z]').hasMatch(password);
+    final hasLower = RegExp(r'[a-z]').hasMatch(password);
+    final hasDigit = RegExp(r'\d').hasMatch(password);
+    final allowedSpecials = <String>{
+      '!', '@', '#', r'$', '%', '^', '&', '*', '(', ')', '_', '+', '-', '=', '[', ']', '{', '}',
+      ';', ':', "'", '"', ',', '.', '<', '>', '?', '/',
+    };
+    final hasAllowedSpecial = password.runes
+        .map((r) => String.fromCharCode(r))
+        .any((ch) => allowedSpecials.contains(ch));
+    final invalidPwdChars = <String>{};
+    for (final r in password.runes) {
+      final ch = String.fromCharCode(r);
+      final isAlnum = RegExp(r'[A-Za-z0-9]').hasMatch(ch);
+      if (isAlnum) continue;
+      if (allowedSpecials.contains(ch)) continue;
+      invalidPwdChars.add(ch);
+    }
+    final passwordOk = pwdLengthOk && hasUpper && hasLower && hasDigit && hasAllowedSpecial && invalidPwdChars.isEmpty;
+
+    final usernameLengthOk = username.length >= 6 && username.length <= 15;
+    final allowedUsername = RegExp(r'^[A-Za-z0-9_.-]+$');
+    final usernameCharsOk = username.isNotEmpty && allowedUsername.hasMatch(username);
+    final isCheckingUsername = username.isNotEmpty && usernameLengthOk && usernameCharsOk && usernameAvailable == null;
+    final usernameOk = usernameLengthOk && usernameCharsOk && usernameAvailable == true;
+
+    final isCheckingEmail = emailOk && emailAvailable == null && !emailCheckFailed;
+    final isFormReady = nameOk && emailOk && emailAvailable == true && passwordOk && usernameOk;
+
+    final String? nameBorderError = nameError ?? ((nameTouched && !nameOk) ? '' : null);
+    final String? emailBorderError = emailError ?? ((emailTouched && (!emailOk || emailAvailable == false)) ? '' : null);
+    final String? passwordBorderError = passwordError ?? ((passwordTouched && !passwordOk) ? '' : null);
+    final bool usernameInvalid = !usernameLengthOk || !usernameCharsOk || usernameAvailable == false;
+    final String? usernameBorderError = usernameError ?? ((usernameTouched && usernameInvalid) ? '' : null);
+
     return Scaffold(
       backgroundColor: AppColors.black,
       appBar: AppBar(
@@ -160,13 +262,92 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 12),            
 
               AuthTextField(
+                label: "Name",
+                hint: "",
+                controller: nameController,
+                focusNode: nameFocusNode,
+                compact: true,
+                useFloatingLabel: true,
+                errorText: nameBorderError,
+              ),
+
+              Builder(builder: (context) {
+                final showCriteria = nameFocusNode.hasFocus || nameError != null || showNameCriteria;
+                if (!showCriteria) return const SizedBox.shrink();
+
+                final invalidChars = <String>{};
+                for (final r in name.runes) {
+                  final ch = String.fromCharCode(r);
+                  if (RegExp(r'[A-Za-z]').hasMatch(ch)) continue;
+                  invalidChars.add(ch);
+                }
+
+                Widget row(bool ok, String text) => Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(ok ? Icons.check_circle : Icons.cancel,
+                            size: 16, color: ok ? Colors.green : Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            text,
+                            softWrap: true,
+                            style: TextStyle(
+                                color: ok ? Colors.green : Colors.red,
+                                fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    );
+
+                return Padding(
+                  padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    if (invalidChars.isNotEmpty) ...[
+                      Row(children: [
+                        const Icon(Icons.cancel, size: 16, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text('Invalid character(s): ${invalidChars.join(' ')}',
+                            style: const TextStyle(color: Colors.red, fontSize: 12)),
+                      ]),
+                      const SizedBox(height: 8),
+                    ],
+                    row(nameOk, 'Only letters (A-Z, a-z)'),
+                  ]),
+                );
+              }),
+
+              AuthTextField(
                 label: "Email",
                 hint: "",
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
                 compact: true,
                 useFloatingLabel: true,
-                errorText: emailError,
+                errorText: emailBorderError,
+                suffix: emailOk
+                    ? Transform.translate(
+                        offset: const Offset(-4, 0),
+                        child: (isCheckingEmail
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: Center(
+                                  child: CupertinoActivityIndicator(
+                                    radius: 7,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            : (emailCheckFailed
+                                ? const Icon(Icons.error_outline, color: AppColors.grey, size: 18)
+                                : (emailAvailable == true
+                                    ? const Icon(Icons.check_circle, color: Colors.green, size: 18)
+                                    : (emailAvailable == false
+                                        ? const Icon(Icons.cancel, color: Color(0xFFD22B2B), size: 18)
+                                        : const SizedBox.shrink())))),
+                      )
+                    : null,
               ),
 
               AuthTextField(
@@ -177,7 +358,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 compact: true,
                 obscureText: _obscurePassword,
                 useFloatingLabel: true,
-                errorText: passwordError,
+                errorText: passwordBorderError,
                 suffix: IconButton(
                   icon: Icon(
                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
@@ -265,7 +446,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 hint: "",
                 controller: usernameController,
                 focusNode: usernameFocusNode,
-                errorText: usernameError,
+                errorText: usernameBorderError,
                 compact: true,
                 useFloatingLabel: true,
               ),
@@ -307,8 +488,17 @@ class _SignupScreenState extends State<SignupScreen> {
                   if (uname.isEmpty) return const SizedBox.shrink();
                   if (usernameAvailable == null) {
                     // checking
-                    return Row(children: const [
-                      SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                    return const Row(children: [
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: Center(
+                          child: CupertinoActivityIndicator(
+                            radius: 7,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                       SizedBox(width: 8),
                       Text('Checking availability...', style: TextStyle(color: AppColors.grey, fontSize: 12)),
                     ]);
@@ -340,32 +530,36 @@ class _SignupScreenState extends State<SignupScreen> {
 
               SizedBox(
                 width: double.infinity,
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  children: [
-                    const Text(
-                      'By continuing you agree to our',
-                      style: TextStyle(color: AppColors.white, fontSize: 12),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const TermsScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Terms of Service',
-                        style: TextStyle(
-                          color: AppColors.orange,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                child: Center(
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: const TextStyle(color: AppColors.white, fontSize: 12),
+                      children: [
+                        const TextSpan(text: 'By continuing you agree to our '),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.baseline,
+                          baseline: TextBaseline.alphabetic,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const TermsScreen()),
+                              );
+                            },
+                            child: const Text(
+                              'Terms of Service',
+                              style: TextStyle(
+                                color: AppColors.orange,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
 
@@ -373,20 +567,47 @@ class _SignupScreenState extends State<SignupScreen> {
 
               PrimaryButton(
                 label: "Continue",
-                onPressed: () async {
+                onPressed: isFormReady
+                    ? () async {
                   setState(() {
                     usernameError = null;
                     emailError = null;
                     passwordError = null;
+                    nameError = null;
                   });
+                  final name = nameController.text.trim();
                   final email = emailController.text.trim();
                   final username = usernameController.text.trim();
                   final password = passwordController.text;
+
+                  if (name.isEmpty || !nameRegex.hasMatch(name)) {
+                    setState(() {
+                      showNameCriteria = true;
+                      nameError = 'Name must contain only letters.';
+                    });
+                    return;
+                  }
 
                   final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
                   if (email.isEmpty || !emailRegex.hasMatch(email)) {
                     setState(() => emailError = 'Please enter a valid email address.');
                     return;
+                  }
+
+                  if (emailAvailable != true) {
+                    try {
+                      final uri = Uri.parse('$backendHost/api/auth/exists?email=${Uri.encodeComponent(email)}');
+                      final resp = await http.get(uri, headers: {'Content-Type': 'application/json'});
+                      if (resp.statusCode == 200) {
+                        final body = jsonDecode(resp.body) as Map<String, dynamic>;
+                        emailAvailable = !(body['exists'] == true);
+                      }
+                    } catch (_) {}
+
+                    if (emailAvailable != true) {
+                      setState(() => emailError = 'Email already registered.');
+                      return;
+                    }
                   }
 
                   // Password validations (show checklist rather than repeating explicit errors)
@@ -488,11 +709,18 @@ class _SignupScreenState extends State<SignupScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => EmailOtpScreen(email: email),
+                      builder: (_) => EmailOtpScreen(
+                        name: name,
+                        email: email,
+                        password: password,
+                        username: username,
+                      ),
                     ),
                   );
-                },
+                }
+                    : null,
               ),
+
 
               const SizedBox(height: 30),
             ],

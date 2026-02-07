@@ -24,10 +24,11 @@ export const registerUser = async (data: RegisterInput) => {
   // 1️⃣ Check if user already exists
   const existingUser = await prisma.users.findUnique({
     where: { email },
+    select: { user_id: true },
   });
 
   if (existingUser) {
-    throw new Error("User already exists with this email");
+    throw new Error("User exists");
   }
 
   // 2️⃣ Hash password
