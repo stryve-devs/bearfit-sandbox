@@ -34,6 +34,7 @@ class AuthTextField extends StatelessWidget {
   final String label;
   final String hint;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final bool obscureText;
   final Widget? suffix;
   final TextInputType keyboardType;
@@ -46,6 +47,7 @@ class AuthTextField extends StatelessWidget {
     required this.label,
     required this.hint,
     this.controller,
+    this.focusNode,
     this.obscureText = false,
     this.suffix,
     this.keyboardType = TextInputType.text,
@@ -67,6 +69,7 @@ class AuthTextField extends StatelessWidget {
           ],
           TextField(
             controller: controller,
+            focusNode: focusNode,
             obscureText: obscureText,
             keyboardType: keyboardType,
             style: TextStyle(color: AppColors.white, fontSize: compact ? 14 : 16),
