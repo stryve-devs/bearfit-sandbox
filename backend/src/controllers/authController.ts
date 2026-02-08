@@ -5,6 +5,7 @@ import {
   refreshAccessToken,
 } from "../services/authService";
 import { googleSignIn } from "../services/authService";
+import prisma from '../config/prismaClient';
 import otpService from '../services/otpService';
 
 /* =======================
@@ -99,16 +100,70 @@ export const refresh = async (req: Request, res: Response) => {
 ======================= */
 export const googleAuth = async (req: Request, res: Response) => {
   try {
-    const { idToken } = req.body;
-    if (!idToken) {
-      return res.status(400).json({ message: "idToken is required" });
+    const { idToken, username, name, email } = req.body as { idToken?: string; username?: string; name?: string; email?: string };
+
+    // If we have an ID token, pass to googleSignIn which decodes/verifies and creates user if needed.
+    if (idToken) {
+      const result = await googleSignIn(idToken, { username, name });
+      return res.status(200).json({ message: 'Google sign-in successful', ...result });
     }
 
-    const result = await googleSignIn(idToken);
+    // Fallback: client provided an email (e.g., Google sign-in on some platforms didn't return idToken).
+    if (email) {
+      // If user already exists, treat as sign-in.
+      const existing = await prisma.users.findUnique({ where: { email }, select: { user_id: true, name: true, email: true, username: true } });
+      if (existing) {
+        // Use loginUser path by creating a temporary password? Instead, return the existing user info without tokens.
+        // For convenience we'll return a 200 with user (caller can choose next step). But better to return error so client can start sign-in.
+        return res.status(200).json({ message: 'User already exists', user: existing });
+      }
 
-    return res.status(200).json({ message: "Google sign-in successful", ...result });
+      // Create user server-side using a generated password (password is not used for Google users).
+      const randomPassword = Math.random().toString(36) + Date.now().toString(36);
+      const created = await registerUser({ name: name || email.split('@')[0], email, password: randomPassword, username });
+
+      // Immediately log the user in to return tokens
+      const loginResult = await loginUser({ email, password: randomPassword });
+      return res.status(200).json({ message: 'Google fallback registration successful', ...loginResult });
+    }
+
+    return res.status(400).json({ message: 'Either idToken or email is required' });
   } catch (error: any) {
     return res.status(400).json({ message: error.message || "Google auth failed" });
+  }
+};
+
+/* =======================
+   REGISTER (GOOGLE COMPLETE)
+   POST /auth/register-google { idToken? | email, username?, name? }
+   Creates a user (with generated password) using Google-provided email and chosen username/name,
+   returns tokens so frontend can treat the user as signed-in.
+======================= */
+export const registerGoogle = async (req: Request, res: Response) => {
+  try {
+    const { idToken, email, username, name } = req.body as { idToken?: string; email?: string; username?: string; name?: string };
+
+    // If idToken provided, reuse googleSignIn which handles idToken decoding and creation
+    if (idToken) {
+      const result = await googleSignIn(idToken, { username, name });
+      return res.status(200).json({ message: 'Google registration successful', ...result });
+    }
+
+    if (!email) return res.status(400).json({ message: 'email is required' });
+
+    // If user already exists, return conflict
+    const existing = await prisma.users.findUnique({ where: { email }, select: { user_id: true } });
+    if (existing) return res.status(409).json({ message: 'User already exists' });
+
+    // create with generated password
+    const randomPassword = Math.random().toString(36) + Date.now().toString(36);
+    const created = await registerUser({ name: name || email.split('@')[0], email, password: randomPassword, username });
+
+    // login to return tokens
+    const loginResult = await loginUser({ email, password: randomPassword });
+    return res.status(201).json({ message: 'Google registration successful', ...loginResult });
+  } catch (error: any) {
+    return res.status(400).json({ message: error.message || 'Google registration failed' });
   }
 };
 

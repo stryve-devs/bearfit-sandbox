@@ -178,7 +178,7 @@ class _SignupScreenState extends State<SignupScreen> {
     final username = usernameController.text.trim();
     final password = passwordController.text;
 
-    final nameRegex = RegExp(r'^[A-Za-z]+$');
+    final nameRegex = RegExp(r"^[\p{L}\s'-]+$", unicode: true);
     final nameOk = name.isNotEmpty && nameRegex.hasMatch(name);
 
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -272,7 +272,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 final invalidChars = <String>{};
                 for (final r in name.runes) {
                   final ch = String.fromCharCode(r);
-                  if (RegExp(r'[A-Za-z]').hasMatch(ch)) continue;
+                  if (RegExp(r"[\p{L}\s'-]", unicode: true).hasMatch(ch)) continue;
                   invalidChars.add(ch);
                 }
 
@@ -306,7 +306,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ]),
                       const SizedBox(height: 8),
                     ],
-                    row(nameOk, 'Only letters (A-Z, a-z)'),
+                    row(nameOk, 'Only letters'),
                   ]),
                 );
               }),

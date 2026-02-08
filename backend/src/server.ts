@@ -18,11 +18,11 @@ app.use('/api', routes);
 
 const start = async () => {
     try {
-        // Ensure Redis is connected before starting the server
+        // Try to connect to Redis but don't abort startup if Redis is unavailable.
+        // This makes local development and testing easier when Redis isn't running.
         await connectRedis();
     } catch (err) {
-        console.error('Failed to connect to Redis, aborting startup.', err);
-        process.exit(1);
+        console.warn('Warning: Failed to connect to Redis. Continuing without Redis.', err);
     }
 
     // Start background jobs

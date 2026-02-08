@@ -70,9 +70,20 @@ class GoogleSignInButton extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const WorkoutScreen()),
               );
             } else {
+              // get idToken to allow username registration on next screen
+              String? idToken;
+              try {
+                final auth = await account.authentication;
+                idToken = auth.idToken;
+              } catch (_) {}
+
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ChooseUsernameScreen()),
+                MaterialPageRoute(builder: (_) => ChooseUsernameScreen(
+                  initialEmail: account.email,
+                  initialName: account.displayName,
+                  idToken: idToken,
+                )),
               );
             }
           } catch (e) {

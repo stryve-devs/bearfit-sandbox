@@ -194,18 +194,18 @@ export const refreshAccessToken = async (refreshToken: string) => {
    NOTE: For production verify the ID token with Google's APIs.
 ======================= */
 
-export const googleSignIn = async (idToken: string) => {
-  if (!idToken) throw new Error("idToken is required");
+export const googleSignIn = async (idToken: string, opts?: { username?: string; name?: string }) => {
+  if (!idToken) throw new Error('idToken is required');
 
   // naive JWT payload decode (no verification!)
-  const parts = idToken.split(".");
-  if (parts.length < 2) throw new Error("Invalid idToken format");
-  const payload = JSON.parse(Buffer.from(parts[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
+  const parts = idToken.split('.');
+  if (parts.length < 2) throw new Error('Invalid idToken format');
+  const payload = JSON.parse(Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
 
   const email: string | undefined = payload.email;
-  const name: string | undefined = payload.name || payload.given_name;
+  const tokenName: string | undefined = payload.name || payload.given_name;
 
-  if (!email) throw new Error("Google token does not contain an email");
+  if (!email) throw new Error('Google token does not contain an email');
 
   // find or create user (select only necessary fields to keep types consistent)
   let user = await prisma.users.findUnique({
@@ -213,13 +213,22 @@ export const googleSignIn = async (idToken: string) => {
     select: { user_id: true, name: true, email: true, username: true },
   });
   if (!user) {
+    // If a username was provided, ensure it's not already taken
+    if (opts?.username) {
+      const existingByUsername = await prisma.users.findUnique({ where: { username: opts.username }, select: { user_id: true } });
+      if (existingByUsername) {
+        throw new Error('Username already taken');
+      }
+    }
+
     const randomPassword = Math.random().toString(36) + Date.now().toString(36);
     const hashedPassword = await hashPassword(randomPassword);
     user = await prisma.users.create({
       data: {
-        name: name || email.split("@")[0],
+        name: opts?.name || tokenName || email.split('@')[0],
         email,
         password_hash: hashedPassword,
+        username: opts?.username,
       },
       select: {
         user_id: true,

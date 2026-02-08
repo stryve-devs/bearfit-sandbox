@@ -72,9 +72,20 @@ class GoogleSignUpButton extends StatelessWidget {
               SnackBar(content: Text('Signed in as ${account.email}')),
             );
 
+            // retrieve idToken so backend can verify / register with username later
+            String? idToken;
+            try {
+              final auth = await account.authentication;
+              idToken = auth.idToken;
+            } catch (_) {}
+
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ChooseUsernameScreen()),
+              MaterialPageRoute(builder: (_) => ChooseUsernameScreen(
+                initialEmail: account.email,
+                initialName: account.displayName,
+                idToken: idToken,
+              )),
             );
           } catch (e) {
             ScaffoldMessenger.of(context).showSnackBar(

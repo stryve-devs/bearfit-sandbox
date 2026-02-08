@@ -13,7 +13,11 @@ import 'select_units_screen.dart';
 import 'auth_config.dart';
 
 class ChooseUsernameScreen extends StatefulWidget {
-  const ChooseUsernameScreen({super.key});
+  final String? initialEmail;
+  final String? initialName;
+  final String? idToken;
+
+  const ChooseUsernameScreen({super.key, this.initialEmail, this.initialName, this.idToken});
 
   @override
   State<ChooseUsernameScreen> createState() => _ChooseUsernameScreenState();
@@ -32,6 +36,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
   bool? usernameAvailable;
   Timer? _usernameDebounce;
   bool usernameTouched = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -96,7 +101,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
   Widget build(BuildContext context) {
     final uname = controller.text.trim();
     final name = nameController.text.trim();
-    final nameRegex = RegExp(r'^[A-Za-z]+$');
+    final nameRegex = RegExp(r"^[\p{L}\s'-]+$", unicode: true);
     final nameOk = name.isNotEmpty && nameRegex.hasMatch(name);
     final lengthOk = uname.length >= 6 && uname.length <= 15;
     final allowed = RegExp(r'^[A-Za-z0-9_.-]+$');
@@ -117,7 +122,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          "Choose username",
+          "Almost there",
           style: TextStyle(
             color: AppColors.orange,
             fontWeight: FontWeight.w600,
@@ -150,7 +155,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                 final invalidChars = <String>{};
                 for (final r in name.runes) {
                   final ch = String.fromCharCode(r);
-                  if (RegExp(r'[A-Za-z]').hasMatch(ch)) continue;
+                  if (RegExp(r"[\p{L}\s'-]", unicode: true).hasMatch(ch)) continue;
                   invalidChars.add(ch);
                 }
 
@@ -184,7 +189,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                       ]),
                       const SizedBox(height: 8),
                     ],
-                    row(nameOk, 'Only letters (A-Z, a-z)'),
+                    row(nameOk, 'Only letters'),
                   ]),
                 );
               }),
@@ -276,15 +281,17 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
               const SizedBox(height: 8),
 
               PrimaryButton(
-                label: "Continue",
-                onPressed: isFormReady
+                label: _isSubmitting ? 'Continuing...' : 'Continue',
+                onPressed: (isFormReady && !_isSubmitting)
                     ? () async {
+                  setState(() => _isSubmitting = true);
                   setState(() => errorText = null);
                   final username = controller.text.trim();
                   if (username.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Please enter a username')),
                     );
+                    setState(() => _isSubmitting = false);
                     return;
                   }
 
@@ -292,6 +299,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                     setState(() {
                       showUsernameCriteria = true;
                       errorText = null;
+                      _isSubmitting = false;
                     });
                     return;
                   }
@@ -301,6 +309,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                     setState(() {
                       showUsernameCriteria = true;
                       errorText = null;
+                      _isSubmitting = false;
                     });
                     return;
                   }
@@ -319,12 +328,78 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                       setState(() {
                         showUsernameCriteria = true;
                         errorText = null;
+                        _isSubmitting = false;
                       });
                       return;
                     }
                   }
 
-                  // proceed to next screen
+                  // If we have an idToken from Google sign-in, register via Google endpoint
+                  if (widget.idToken != null) {
+                    try {
+                      final uri = Uri.parse('$backendHost/api/auth/register-google');
+                      final resp = await http.post(
+                        uri,
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode({
+                          'idToken': widget.idToken,
+                          'username': username,
+                          'name': nameController.text.trim(),
+                        }),
+                      );
+                      if (resp.statusCode == 200) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),
+                        );
+                        return;
+                      } else {
+                        final msg = (resp.body.isNotEmpty) ? jsonDecode(resp.body)['message'] ?? 'Registration failed' : 'Registration failed';
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                        setState(() => _isSubmitting = false);
+                        return;
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Network error')));
+                      setState(() => _isSubmitting = false);
+                      return;
+                    }
+                  }
+
+                  // Fallback when idToken wasn't provided but we do have an initial email from Google
+                  if (widget.initialEmail != null) {
+                    try {
+                      final uri = Uri.parse('$backendHost/api/auth/google');
+                      final resp = await http.post(
+                        uri,
+                        headers: {'Content-Type': 'application/json'},
+                        body: jsonEncode({
+                          'email': widget.initialEmail,
+                          'username': username,
+                          'name': nameController.text.trim(),
+                        }),
+                      );
+                      if (resp.statusCode == 200) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),
+                        );
+                        return;
+                      } else {
+                        final msg = (resp.body.isNotEmpty) ? jsonDecode(resp.body)['message'] ?? 'Registration failed' : 'Registration failed';
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                        setState(() => _isSubmitting = false);
+                        return;
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Network error')));
+                      setState(() => _isSubmitting = false);
+                      return;
+                    }
+                  }
+
+
+                  // proceed to next screen (non-Google flow)
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -333,6 +408,8 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                   );
                 }
                     : null,
+                backgroundColor: (isFormReady && !_isSubmitting) ? null : const Color(0xFF555555),
+                foregroundColor: (isFormReady && !_isSubmitting) ? null : Colors.white,
               ),
 
               if (!isFormReady && (uname.isNotEmpty || name.isNotEmpty))
@@ -345,8 +422,6 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                     style: const TextStyle(color: AppColors.grey, fontSize: 12),
                   ),
                 ),
-
-              const SizedBox(height: 30),
             ],
           ),
         ),
