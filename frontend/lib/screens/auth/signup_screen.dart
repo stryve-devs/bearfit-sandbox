@@ -6,7 +6,6 @@ import 'widgets/auth_text_field.dart';
 import 'widgets/primary_button.dart';
 
 import 'terms_screen.dart';
-import 'select_units_screen.dart';
 import 'email_otp_screen.dart';
 import 'widgets/signup_info_dialog.dart';
 

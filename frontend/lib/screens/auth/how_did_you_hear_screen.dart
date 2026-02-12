@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/colors.dart';
 import 'widgets/primary_button.dart';
-import 'workout_screen.dart';
+import '../workout/workout_screen.dart';
 
 class HowDidYouHearScreen extends StatefulWidget {
   const HowDidYouHearScreen({super.key});

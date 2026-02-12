@@ -1,5 +1,6 @@
 import { Router } from "express";
 import authRoutes from "./authRoutes";
+import { authenticate } from "../middlewares/authMiddleware";
 import userRoutes from "./userRoutes";
 import meRoutes from "./me.routes";
 import logsRoutes from "./logsRoutes";
@@ -9,6 +10,9 @@ const router = Router();
 
 // Auth routes
 router.use("/auth", authRoutes);
+
+// Protect all subsequent routes with access-token authentication
+router.use(authenticate);
 
 // User routes (protected)
 router.use("/users", userRoutes);

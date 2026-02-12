@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'widgets/primary_button.dart';
 import 'select_units_screen.dart';
 import 'auth_config.dart';
+import '../../services/token_service.dart';
 
 class EmailOtpScreen extends StatefulWidget {
   final String email;
@@ -190,13 +191,36 @@ class _EmailOtpScreenState extends State<EmailOtpScreen> {
                           return;
                         }
 
+                        // After successful registration, immediately log the user in to
+                        // obtain access/refresh tokens and store them.
+                        final loginUri = Uri.parse('$backendHost/api/auth/login');
+                        final loginResp = await http.post(
+                          loginUri,
+                          headers: {'Content-Type': 'application/json'},
+                          body: jsonEncode({'email': widget.email, 'password': widget.password}),
+                        );
+
+                        if (loginResp.statusCode != 200) {
+                          final msg = (loginResp.body.isNotEmpty) ? jsonDecode(loginResp.body)['message'] ?? 'Login failed' : 'Login failed';
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                          setState(() => _isSubmitting = false);
+                          return;
+                        }
+
+                        final loginBody = jsonDecode(loginResp.body);
+                        final newAccess = loginBody['accessToken'] as String?;
+                        final newRefresh = loginBody['refreshToken'] as String?;
+                        if (newAccess != null && newRefresh != null) {
+                          TokenService.setTokens(accessToken: newAccess, refreshToken: newRefresh);
+                        }
+
                         // Success: navigate to next screen
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),
                         );
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Network error')));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Network error')));
                         setState(() => _isSubmitting = false);
                       }
                     }

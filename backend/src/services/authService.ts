@@ -5,6 +5,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
   JwtPayload,
+  REFRESH_TOKEN_EXPIRES_IN_MS,
 } from "../utils/jwtUtils";
 
 /* =======================
@@ -111,9 +112,7 @@ export const loginUser = async (data: LoginInput) => {
     data: {
       token: refreshToken,
       user_id: user.user_id,
-      expires_at: new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
-      ),
+      expires_at: new Date(Date.now() + REFRESH_TOKEN_EXPIRES_IN_MS),
     },
   });
 
@@ -144,6 +143,8 @@ export const refreshAccessToken = async (refreshToken: string) => {
     where: { token: refreshToken },
   });
 
+  console.debug('[authService] refreshAccessToken called; tokenPrefix=' + String(refreshToken).slice(0,8) + ' found=' + !!storedToken + (storedToken ? (' revoked=' + storedToken.revoked + ' expires_at=' + storedToken.expires_at) : ''));
+
   if (!storedToken || storedToken.revoked) {
     throw new Error("Invalid refresh token");
   }
@@ -153,11 +154,12 @@ export const refreshAccessToken = async (refreshToken: string) => {
     throw new Error("Refresh token expired");
   }
 
-  // 4️⃣ Revoke old refresh token (rotation)
-  await prisma.refresh_tokens.update({
-    where: { id: storedToken.id },
-    data: { revoked: true },
-  });
+  // 4️⃣ Refresh rotation: do NOT immediately revoke the old token here.
+  // For development and to avoid client-side race conditions where multiple
+  // concurrent refresh requests would revoke each other's tokens, keep the
+  // existing refresh token valid until its original expiry. This ensures
+  // multiple quick refreshes won't log the user out. In production you may
+  // want strict single-use rotation and additional safeguards.
 
   // 5️⃣ Create new JWT payload
   const payload: JwtPayload = {
@@ -171,15 +173,28 @@ export const refreshAccessToken = async (refreshToken: string) => {
   const newRefreshToken = generateRefreshToken(payload);
 
   // 7️⃣ Store new refresh token
-  await prisma.refresh_tokens.create({
-    data: {
-      token: newRefreshToken,
-      user_id: storedToken.user_id,
-      expires_at: new Date(
-        Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
-      ),
-    },
-  });
+  // Keep the original expiry time instead of extending it on every refresh.
+  // This prevents sliding expiration when the client refreshes frequently.
+  try {
+    await prisma.refresh_tokens.create({
+      data: {
+        token: newRefreshToken,
+        user_id: storedToken.user_id,
+        expires_at: storedToken.expires_at, // preserve original expiry
+      },
+    });
+  } catch (err: any) {
+    // Handle rare race where two concurrent refresh operations generate the same
+    // refresh token (possible if JWT iat has second granularity). If the DB
+    // reports a unique constraint violation, another request already inserted
+    // the same token — treat this as success and continue returning tokens.
+    const msg = String(err?.message || err);
+    if (msg.includes('Unique constraint failed') || err?.code === 'P2002') {
+      console.debug('[authService] refresh token create conflict; treating as OK');
+    } else {
+      throw err;
+    }
+  }
 
   return {
     accessToken: newAccessToken,
@@ -253,7 +268,7 @@ export const googleSignIn = async (idToken: string, opts?: { username?: string; 
     data: {
       token: refreshToken,
       user_id: user.user_id,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expires_at: new Date(Date.now() + REFRESH_TOKEN_EXPIRES_IN_MS),
     },
   });
 

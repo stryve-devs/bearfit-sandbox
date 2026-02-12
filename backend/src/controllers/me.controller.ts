@@ -3,10 +3,15 @@ import * as meService from "../services/me.service";
 
 export const getMe = async (req: Request, res: Response) => {
   const id = (req as any).user!.userId;
-  const user = await meService.getUserById(id);
-  if (!user) return res.status(404).json({ message: "User not found" });
-  const { password_hash, ...safeUser } = user as any;
-  res.json(safeUser);
+  try {
+    const user = await meService.getUserById(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    const { password_hash, ...safeUser } = user as any;
+    res.json(safeUser);
+  } catch (err: any) {
+    console.error('getMe error', err);
+    return res.status(500).json({ message: err.message || 'Failed to load user' });
+  }
 };
 
 export const updateMe = async (req: Request, res: Response) => {

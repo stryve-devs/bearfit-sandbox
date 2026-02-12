@@ -3,7 +3,8 @@ import 'package:frontend/constants/colors.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../auth/auth_config.dart';
-import '../workout_screen.dart';
+import '../../workout/workout_screen.dart';
+import '../../../services/token_service.dart';
 
 import 'auth_text_field.dart';
 import 'primary_button.dart';
@@ -64,7 +65,13 @@ class _LoginFormState extends State<LoginForm> {
       );
 
       if (loginResp.statusCode == 200) {
-        // Success -> navigate to WorkoutScreen
+        // Save tokens then navigate to WorkoutScreen
+        final body = jsonDecode(loginResp.body) as Map<String, dynamic>;
+        final access = body['accessToken'] as String?;
+        final refresh = body['refreshToken'] as String?;
+        if (access != null && refresh != null) {
+          TokenService.setTokens(accessToken: access, refreshToken: refresh);
+        }
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const WorkoutScreen()),

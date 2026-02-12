@@ -15,6 +15,30 @@ const ACCESS_TOKEN_EXPIRES_IN =
 const REFRESH_TOKEN_EXPIRES_IN =
   (process.env.JWT_REFRESH_EXPIRES_IN as SignOptions["expiresIn"]) || "7d";
 
+// Parse simple duration strings like "10s", "5m", "2h", "7d" into milliseconds
+const parseDurationToMs = (value: string): number => {
+  const trimmed = String(value).trim();
+  const m = trimmed.match(/^(\d+)(s|m|h|d)?$/i);
+  if (!m) return 0;
+  const n = parseInt(m[1], 10);
+  const unit = (m[2] || "s").toLowerCase();
+  switch (unit) {
+    case "s":
+      return n * 1000;
+    case "m":
+      return n * 60 * 1000;
+    case "h":
+      return n * 60 * 60 * 1000;
+    case "d":
+      return n * 24 * 60 * 60 * 1000;
+    default:
+      return n * 1000;
+  }
+};
+
+export const ACCESS_TOKEN_EXPIRES_IN_MS = parseDurationToMs(String(ACCESS_TOKEN_EXPIRES_IN));
+export const REFRESH_TOKEN_EXPIRES_IN_MS = parseDurationToMs(String(REFRESH_TOKEN_EXPIRES_IN));
+
 /**
  * Fail fast if secrets are missing
  * (important for both dev and prod)

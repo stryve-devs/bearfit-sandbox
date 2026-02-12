@@ -7,19 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model meals {
-  meal_id   Int      @id @default(autoincrement())
-  user_id   Int?
-  date      DateTime @db.Date
-  meal_type String?  @db.VarChar(50)
-  calories  Decimal? @db.Decimal(6, 2)
-  protein   Decimal? @db.Decimal(6, 2)
-  carbs     Decimal? @db.Decimal(6, 2)
-  fat       Decimal? @db.Decimal(6, 2)
-  notes     String?
-  users     users?   @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-}
-
 model progress {
   progress_id         Int      @id @default(autoincrement())
   user_id             Int?
@@ -41,7 +28,6 @@ model users {
   username       String?          @unique @db.VarChar(150)
   email          String           @unique @db.VarChar(320)
   password_hash  String
-  role           String           @default("USER") @db.VarChar(20)
   is_active      Boolean          @default(true)
   email_verified Boolean          @default(false)
   gender         String?          @db.VarChar(10)
@@ -53,7 +39,12 @@ model users {
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
   deleted_at     DateTime?
-  meals          meals[]
+  theme          ThemePreference  @default(SYSTEM)
+  role           Role             @default(USER)
+  Food           Food[]
+  Meal           Meal[]
+  PersonalRecord PersonalRecord[]
+  Routine        Routine[]
   progress       progress[]
   refresh_tokens refresh_tokens[]
   workouts       workouts[]
@@ -87,7 +78,6 @@ model workout_exercises {
 model workouts {
   workout_id        Int                 @id @default(autoincrement())
   user_id           Int?
-  client_id         String?             @db.VarChar(255)
   date              DateTime            @db.Date
   type              String?             @db.VarChar(30)
   duration_minutes  Int?
@@ -95,21 +85,120 @@ model workouts {
   notes             String?
   workout_exercises workout_exercises[]
   users             users?              @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([user_id, client_id])
 }
 
 model Exercise {
-  exercise_id        Int                 @id @default(autoincrement())
-  name               String              @db.VarChar(150)
-  category           String?             @db.VarChar(100)
-  equipment_required String?             @db.VarChar(150)
-  workout_exercises  workout_exercises[]
-  MuscleGroup        MuscleGroup[]
+  exercise_id       Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(150)
+  category          String?             @db.VarChar(100)
+  equipment_id      Int?
+  Equipment         Equipment?          @relation(fields: [equipment_id], references: [equipment_id])
+  PersonalRecord    PersonalRecord[]
+  RoutineExercise   RoutineExercise[]
+  workout_exercises workout_exercises[]
+  MuscleGroup       MuscleGroup[]       @relation("ExerciseToMuscleGroup")
 }
 
 model MuscleGroup {
   id       Int        @id @default(autoincrement())
   name     String     @unique @db.VarChar(100)
-  Exercise Exercise[]
+  Exercise Exercise[] @relation("ExerciseToMuscleGroup")
+}
+
+model Equipment {
+  equipment_id Int        @id @default(autoincrement())
+  name         String     @unique @db.VarChar(100)
+  Exercise     Exercise[]
+}
+
+model Food {
+  food_id      Int        @id @default(autoincrement())
+  name         String     @db.VarChar(255)
+  brand        String?    @db.VarChar(150)
+  calories     Decimal    @db.Decimal(7, 2)
+  protein      Decimal    @db.Decimal(7, 2)
+  carbs        Decimal    @db.Decimal(7, 2)
+  fat          Decimal    @db.Decimal(7, 2)
+  fiber        Decimal?   @db.Decimal(7, 2)
+  serving_size Decimal    @db.Decimal(7, 2)
+  serving_unit String     @db.VarChar(50)
+  is_global    Boolean    @default(true)
+  created_by   Int?
+  users        users?     @relation(fields: [created_by], references: [user_id])
+  MealItem     MealItem[]
+
+  @@index([name])
+}
+
+model Meal {
+  meal_id     Int        @id @default(autoincrement())
+  user_id     Int
+  name        String     @db.VarChar(150)
+  meal_type   String?    @db.VarChar(50)
+  is_template Boolean    @default(false)
+  date        DateTime   @default(now())
+  users       users      @relation(fields: [user_id], references: [user_id])
+  MealItem    MealItem[]
+
+  @@index([user_id])
+}
+
+model MealItem {
+  id       Int     @id @default(autoincrement())
+  meal_id  Int
+  food_id  Int
+  quantity Decimal @db.Decimal(7, 2)
+  Food     Food    @relation(fields: [food_id], references: [food_id])
+  Meal     Meal    @relation(fields: [meal_id], references: [meal_id], onDelete: Cascade)
+}
+
+model PersonalRecord {
+  pr_id       Int      @id @default(autoincrement())
+  user_id     Int
+  exercise_id Int
+  date        DateTime @default(now())
+  weight      Decimal? @db.Decimal(6, 2)
+  reps        Int?
+  time        Decimal? @db.Decimal(10, 2)
+  distance    Decimal? @db.Decimal(10, 2)
+  one_rep_max Decimal? @db.Decimal(6, 2)
+  Exercise    Exercise @relation(fields: [exercise_id], references: [exercise_id])
+  users       users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id, exercise_id])
+}
+
+model Routine {
+  routine_id      Int               @id @default(autoincrement())
+  user_id         Int
+  name            String            @db.VarChar(150)
+  description     String?
+  created_at      DateTime          @default(now())
+  users           users             @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  RoutineExercise RoutineExercise[]
+
+  @@index([user_id])
+}
+
+model RoutineExercise {
+  id          Int      @id @default(autoincrement())
+  routine_id  Int
+  exercise_id Int
+  order       Int
+  target_sets Int?
+  target_reps Int?
+  notes       String?
+  Exercise    Exercise @relation(fields: [exercise_id], references: [exercise_id])
+  Routine     Routine  @relation(fields: [routine_id], references: [routine_id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ThemePreference {
+  SYSTEM
+  LIGHT
+  DARK
 }

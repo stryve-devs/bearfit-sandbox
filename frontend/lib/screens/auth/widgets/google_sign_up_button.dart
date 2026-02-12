@@ -6,8 +6,9 @@ import '../../../utils/signin_logger_io.dart' if (dart.library.html) '../../../u
 import '../choose_username_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../../services/token_service.dart';
 import '../auth_config.dart';
-import '../workout_screen.dart';
+import '../../workout/workout_screen.dart';
 
 class GoogleSignUpButton extends StatelessWidget {
   const GoogleSignUpButton({super.key});
@@ -59,8 +60,42 @@ class GoogleSignUpButton extends StatelessWidget {
               }
             } catch (_) {}
 
-            if (exists) {
-              // If the email already exists, send user straight to the workout screen.
+            // Try to exchange idToken for backend tokens (preferred). If idToken isn't available,
+            // use the email fallback to request tokens from the backend (development convenience).
+            String? idToken;
+            try {
+              final auth = await account.authentication;
+              idToken = auth.idToken;
+            } catch (_) {}
+
+            Future<bool> tryExchange(Map<String, dynamic> payload) async {
+              try {
+                final uri = Uri.parse('$backendHost/api/auth/google');
+                final resp = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: jsonEncode(payload));
+                if (resp.statusCode == 200) {
+                  final body = jsonDecode(resp.body) as Map<String, dynamic>;
+                  final access = body['accessToken'] as String?;
+                  final refresh = body['refreshToken'] as String?;
+                  if (access != null && refresh != null) {
+                    TokenService.setTokens(accessToken: access, refreshToken: refresh);
+                    return true;
+                  }
+                }
+              } catch (_) {}
+              return false;
+            }
+
+            bool exchanged = false;
+            if (idToken != null) {
+              exchanged = await tryExchange({'idToken': idToken});
+            }
+
+            if (!exchanged && exists) {
+              // Try email fallback
+              exchanged = await tryExchange({'email': account.email});
+            }
+
+            if (exchanged) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const WorkoutScreen()),
@@ -68,16 +103,12 @@ class GoogleSignUpButton extends StatelessWidget {
               return;
             }
 
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to obtain backend tokens from Google sign-in. Please try signing in again.')));
+            return;
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Signed in as ${account.email}')),
             );
-
-            // retrieve idToken so backend can verify / register with username later
-            String? idToken;
-            try {
-              final auth = await account.authentication;
-              idToken = auth.idToken;
-            } catch (_) {}
 
             Navigator.push(
               context,

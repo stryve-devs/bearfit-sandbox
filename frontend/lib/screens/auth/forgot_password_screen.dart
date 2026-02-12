@@ -133,10 +133,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                Center(
+                const Center(
                   child: Text(
                     'Check your inbox',
-                    style: const TextStyle(color: AppColors.orange, fontWeight: FontWeight.w600, fontSize: 18),
+                    style: TextStyle(color: AppColors.orange, fontWeight: FontWeight.w600, fontSize: 18),
                   ),
                 ),
                 const SizedBox(height: 12),

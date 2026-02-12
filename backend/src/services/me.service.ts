@@ -3,7 +3,7 @@ import prisma from "../config/prismaClient";
 export const exportUserData = async (id: number) => {
   return prisma.users.findUnique({
     where: { user_id: id },
-    include: { workouts: true, meals: true, progress: true, refresh_tokens: true },
+    include: { workouts: true, Meal: true, progress: true, refresh_tokens: true },
   });
 };
 

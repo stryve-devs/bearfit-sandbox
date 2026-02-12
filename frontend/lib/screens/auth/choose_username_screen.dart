@@ -8,6 +8,7 @@ import 'widgets/primary_button.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import '../../services/token_service.dart';
 
 import 'select_units_screen.dart';
 import 'auth_config.dart';
@@ -348,6 +349,16 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                         }),
                       );
                       if (resp.statusCode == 200) {
+                        // Store tokens if returned
+                        try {
+                          final body = jsonDecode(resp.body) as Map<String, dynamic>;
+                          final access = body['accessToken'] as String?;
+                          final refresh = body['refreshToken'] as String?;
+                          if (access != null && refresh != null) {
+                            TokenService.setTokens(accessToken: access, refreshToken: refresh);
+                          }
+                        } catch (_) {}
+
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),
@@ -380,6 +391,14 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                         }),
                       );
                       if (resp.statusCode == 200) {
+                        try {
+                          final body = jsonDecode(resp.body) as Map<String, dynamic>;
+                          final access = body['accessToken'] as String?;
+                          final refresh = body['refreshToken'] as String?;
+                          if (access != null && refresh != null) {
+                            TokenService.setTokens(accessToken: access, refreshToken: refresh);
+                          }
+                        } catch (_) {}
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(builder: (_) => const SelectUnitsScreen()),

@@ -5,6 +5,7 @@ import {
   refreshAccessToken,
 } from "../services/authService";
 import { googleSignIn } from "../services/authService";
+import { generateAccessToken, generateRefreshToken, REFRESH_TOKEN_EXPIRES_IN_MS } from "../utils/jwtUtils";
 import prisma from '../config/prismaClient';
 import otpService from '../services/otpService';
 
@@ -82,6 +83,7 @@ export const refresh = async (req: Request, res: Response) => {
       });
     }
 
+    console.debug('[authController] refresh called; tokenPrefix=' + String(refreshToken).slice(0, 8));
     const tokens = await refreshAccessToken(refreshToken);
 
     return res.status(200).json({
@@ -110,12 +112,24 @@ export const googleAuth = async (req: Request, res: Response) => {
 
     // Fallback: client provided an email (e.g., Google sign-in on some platforms didn't return idToken).
     if (email) {
-      // If user already exists, treat as sign-in.
+      // If user already exists, treat as sign-in and return tokens (development convenience).
       const existing = await prisma.users.findUnique({ where: { email }, select: { user_id: true, name: true, email: true, username: true } });
       if (existing) {
-        // Use loginUser path by creating a temporary password? Instead, return the existing user info without tokens.
-        // For convenience we'll return a 200 with user (caller can choose next step). But better to return error so client can start sign-in.
-        return res.status(200).json({ message: 'User already exists', user: existing });
+        // Generate tokens for the existing user so clients that can't provide idToken still receive tokens.
+        const payload = { userId: existing.user_id, email: existing.email, role: 'USER' };
+        const accessToken = generateAccessToken(payload as any);
+        const refreshToken = generateRefreshToken(payload as any);
+
+        // Store refresh token in DB
+        await prisma.refresh_tokens.create({
+          data: {
+            token: refreshToken,
+            user_id: existing.user_id,
+            expires_at: new Date(Date.now() + REFRESH_TOKEN_EXPIRES_IN_MS),
+          },
+        });
+
+        return res.status(200).json({ message: 'Google sign-in (email fallback) successful', accessToken, refreshToken, user: existing });
       }
 
       // Create user server-side using a generated password (password is not used for Google users).
