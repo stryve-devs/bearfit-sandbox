@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../auth/auth_config.dart';
 import '../../workout/workout_screen.dart';
-import '../../../services/token_service.dart';
+import '../../../services/auth/token_service.dart';
 
 import 'auth_text_field.dart';
 import 'primary_button.dart';

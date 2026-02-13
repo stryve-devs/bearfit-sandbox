@@ -3,7 +3,7 @@ import express from 'express';
 import { json } from 'body-parser';
 import routes from './routes';
 import corsConfig from './config/corsConfig';
-import { startPurgeJob } from './jobs/purgeJob';
+import { startPurgeJob } from './jobs/me/purgeJob';
 import { connectRedis } from './config/redisClient';
 
 const app = express();

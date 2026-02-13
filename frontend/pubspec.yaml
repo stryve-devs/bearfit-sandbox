@@ -21,4 +21,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/auth/icons/
+    - assets/auth/images/
+    - assets/workout/icons/
+    - assets/workout/images/

@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../../../utils/signin_logger_io.dart' if (dart.library.html) '../../../utils/signin_logger_web.dart' as signin_logger;
+import '../../../utils/auth/signin_logger_io.dart' if (dart.library.html) '../../../utils/auth/signin_logger_web.dart' as signin_logger;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../../services/token_service.dart';
+import '../../../services/auth/token_service.dart';
 
 import '../auth_config.dart';
 import '../choose_username_screen.dart';

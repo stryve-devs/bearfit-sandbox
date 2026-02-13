@@ -1,5 +1,5 @@
 import prisma from "../src/config/prismaClient";
-import { createWorkout } from "../src/services/workoutService";
+import { createWorkout } from "../src/services/workout/workout.service";
 
 jest.mock("../src/config/prismaClient", () => ({
   __esModule: true,

@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'widgets/primary_button.dart';
 import 'select_units_screen.dart';
 import 'auth_config.dart';
-import '../../services/token_service.dart';
+import '../../services/auth/token_service.dart';
 
 class EmailOtpScreen extends StatefulWidget {
   final String email;

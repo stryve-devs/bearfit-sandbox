@@ -8,7 +8,7 @@ import 'widgets/primary_button.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import '../../services/token_service.dart';
+import '../../services/auth/token_service.dart';
 
 import 'select_units_screen.dart';
 import 'auth_config.dart';
@@ -82,7 +82,7 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
     }
 
     _usernameDebounce?.cancel();
-    _usernameDebounce = Timer(const Duration(milliseconds: 700), () async {
+        _usernameDebounce = Timer(const Duration(milliseconds: 700), () async {
       final value = controller.text.trim();
       final allowed = RegExp(r'^[A-Za-z0-9_.-]+$');
       if (value.length >= 6 && value.length <= 15 && allowed.hasMatch(value)) {
@@ -93,7 +93,9 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
             final body = jsonDecode(resp.body) as Map<String, dynamic>;
             if (mounted) setState(() => usernameAvailable = !(body['exists'] == true));
           }
-        } catch (_) {}
+        } catch (_) {
+          if (mounted) setState(() => usernameAvailable = false);
+        }
       }
     });
   }
@@ -323,7 +325,9 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                         final body = jsonDecode(resp.body) as Map<String, dynamic>;
                         usernameAvailable = !(body['exists'] == true);
                       }
-                    } catch (_) {}
+                    } catch (_) {
+                      usernameAvailable = false;
+                    }
 
                     if (usernameAvailable != true) {
                       setState(() {
@@ -338,6 +342,14 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                   // If we have an idToken from Google sign-in, register via Google endpoint
                   if (widget.idToken != null) {
                     try {
+                      try {
+                        // ignore: avoid_print
+                        print('DEBUG ChooseUsername: POST /auth/register-google payload=' + jsonEncode({
+                          'idToken': widget.idToken,
+                          'username': username,
+                          'name': nameController.text.trim(),
+                        }));
+                      } catch (_) {}
                       final uri = Uri.parse('$backendHost/api/auth/register-google');
                       final resp = await http.post(
                         uri,
@@ -348,6 +360,10 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                           'name': nameController.text.trim(),
                         }),
                       );
+                      try {
+                        // ignore: avoid_print
+                        print('DEBUG ChooseUsername: /auth/register-google status=${resp.statusCode} body=${resp.body}');
+                      } catch (_) {}
                       if (resp.statusCode == 200) {
                         // Store tokens if returned
                         try {
@@ -380,6 +396,14 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                   // Fallback when idToken wasn't provided but we do have an initial email from Google
                   if (widget.initialEmail != null) {
                     try {
+                      try {
+                        // ignore: avoid_print
+                        print('DEBUG ChooseUsername: POST /auth/google payload=' + jsonEncode({
+                          'email': widget.initialEmail,
+                          'username': username,
+                          'name': nameController.text.trim(),
+                        }));
+                      } catch (_) {}
                       final uri = Uri.parse('$backendHost/api/auth/google');
                       final resp = await http.post(
                         uri,
@@ -390,6 +414,10 @@ class _ChooseUsernameScreenState extends State<ChooseUsernameScreen> {
                           'name': nameController.text.trim(),
                         }),
                       );
+                      try {
+                        // ignore: avoid_print
+                        print('DEBUG ChooseUsername: /auth/google status=${resp.statusCode} body=${resp.body}');
+                      } catch (_) {}
                       if (resp.statusCode == 200) {
                         try {
                           final body = jsonDecode(resp.body) as Map<String, dynamic>;

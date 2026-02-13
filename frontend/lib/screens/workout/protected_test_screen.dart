@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:frontend/constants/colors.dart';
-import '../../services/api_client.dart';
+import '../../services/core/api_client.dart';
 
 class ProtectedTestScreen extends StatefulWidget {
   const ProtectedTestScreen({super.key});

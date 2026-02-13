@@ -2,11 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../../../utils/signin_logger_io.dart' if (dart.library.html) '../../../utils/signin_logger_web.dart' as signin_logger;
+import '../../../utils/auth/signin_logger_io.dart' if (dart.library.html) '../../../utils/auth/signin_logger_web.dart' as signin_logger;
 import '../choose_username_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../../services/token_service.dart';
+import '../../../services/auth/token_service.dart';
 import '../auth_config.dart';
 import '../../workout/workout_screen.dart';
 
@@ -68,10 +68,23 @@ class GoogleSignUpButton extends StatelessWidget {
               idToken = auth.idToken;
             } catch (_) {}
 
+            // Temporary debug: log idToken preview, email and exists flag
+            try {
+              final idPreview = idToken != null && idToken.length > 20 ? '${idToken.substring(0,20)}...' : (idToken ?? '<null>');
+              // ignore: avoid_print
+              print('DEBUG GoogleSignUpButton: email=${account.email} idTokenPreview=$idPreview exists=$exists');
+            } catch (_) {}
+
             Future<bool> tryExchange(Map<String, dynamic> payload) async {
               try {
                 final uri = Uri.parse('$backendHost/api/auth/google');
                 final resp = await http.post(uri, headers: {'Content-Type': 'application/json'}, body: jsonEncode(payload));
+                // Temporary debug: log exchange response
+                try {
+                  // ignore: avoid_print
+                  print('DEBUG GoogleSignUpButton tryExchange: status=${resp.statusCode} body=${resp.body}');
+                } catch (_) {}
+
                 if (resp.statusCode == 200) {
                   final body = jsonDecode(resp.body) as Map<String, dynamic>;
                   final access = body['accessToken'] as String?;
@@ -103,12 +116,13 @@ class GoogleSignUpButton extends StatelessWidget {
               return;
             }
 
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to obtain backend tokens from Google sign-in. Please try signing in again.')));
-            return;
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Signed in as ${account.email}')),
-            );
+            // If exchange failed but we have an idToken, this likely means the user
+            // doesn't exist yet — navigate to username selection so they can register.
+            // New user -> continue to choose username (pass idToken if available)
+            try {
+              // ignore: avoid_print
+              print('DEBUG GoogleSignUpButton: navigating to ChooseUsernameScreen for ${account.email} (idTokenPreview=${idToken != null ? (idToken.length>20 ? idToken.substring(0,20)+'...' : idToken) : '<null>'})');
+            } catch (_) {}
 
             Navigator.push(
               context,
@@ -118,6 +132,7 @@ class GoogleSignUpButton extends StatelessWidget {
                 idToken: idToken,
               )),
             );
+            return;
           } catch (e) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Google sign-in failed: $e')),

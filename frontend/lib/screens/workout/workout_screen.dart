@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:frontend/constants/colors.dart';
 import '../auth/auth_config.dart';
 import '../auth/splash_screen.dart';
-import '../../services/api_client.dart';
-import '../../services/token_service.dart';
+import '../../services/core/api_client.dart';
+import '../../services/auth/token_service.dart';
 import 'protected_test_screen.dart';
 
 class WorkoutScreen extends StatefulWidget {
