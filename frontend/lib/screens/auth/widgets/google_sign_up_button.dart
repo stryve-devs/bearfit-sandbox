@@ -25,6 +25,7 @@ class GoogleSignUpButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
+          minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(vertical: 14),
           elevation: 0,
         ),

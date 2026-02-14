@@ -9,6 +9,8 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const double buttonHeight = 52;
+
     return Scaffold(
       backgroundColor: AppColors.black,
       body: SafeArea(
@@ -26,6 +28,7 @@ class SplashScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2D2C2C),
                     foregroundColor: AppColors.white,
+                    minimumSize: const Size.fromHeight(buttonHeight),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -33,7 +36,7 @@ class SplashScreen extends StatelessWidget {
                     elevation: 0,
                   ),
                   onPressed: () {},
-                  icon: const Icon(Icons.apple, size: 35),
+                  icon: const Icon(Icons.apple, size: 24),
                   label: const Text(
                     'Sign up with Apple',
                     style: TextStyle(
@@ -51,6 +54,7 @@ class SplashScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2D2C2C),
                     foregroundColor: AppColors.white,
+                    minimumSize: const Size.fromHeight(buttonHeight),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -65,7 +69,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.mail, size: 35),
+                  icon: const Icon(Icons.mail, size: 24),
                   label: const Text(
                     'Sign up with Email',
                     style: TextStyle(
