@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../state/app_state.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class NotificationsScreen extends StatelessWidget {
   final AppState appState;
@@ -33,6 +34,10 @@ class NotificationsScreen extends StatelessWidget {
                 );
               },
             ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
+      ),
     );
   }
 }

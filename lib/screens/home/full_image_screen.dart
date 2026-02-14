@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class FullImageScreen extends StatelessWidget {
   final String imageUrl;
@@ -14,6 +15,10 @@ class FullImageScreen extends StatelessWidget {
         child: InteractiveViewer(
           child: Image.network(imageUrl),
         ),
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

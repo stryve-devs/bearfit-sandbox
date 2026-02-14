@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class Home24ShareScreen extends StatefulWidget {
   final String title;
@@ -304,6 +305,10 @@ class _Home24ShareScreenState extends State<Home24ShareScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

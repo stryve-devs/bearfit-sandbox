@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/athlete.dart';
 import '../../state/app_state.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class AthleteSearchDelegate extends SearchDelegate<Athlete?> {
   final AppState appState;

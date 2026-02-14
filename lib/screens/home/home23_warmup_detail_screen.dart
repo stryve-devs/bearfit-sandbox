@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/app/router.dart';
 import '../../routes/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class Home23WarmUpDetail extends StatelessWidget {
   final String title;
@@ -130,6 +131,10 @@ class Home23WarmUpDetail extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

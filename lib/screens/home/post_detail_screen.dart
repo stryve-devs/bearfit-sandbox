@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../state/app_state.dart';
 import '../../data/models.dart';
 import '../../app/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class PostDetailScreen extends StatelessWidget {
   final AppState appState;
@@ -15,6 +16,7 @@ class PostDetailScreen extends StatelessWidget {
     final liked = appState.likedPosts.contains(post.id);
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(title: const Text('Post Detail')),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -46,6 +48,10 @@ class PostDetailScreen extends StatelessWidget {
             ],
           ),
         ],
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_frontend/app/router.dart';
 import 'package:flutter_frontend/state/app_state.dart';
 import '../../data/models/athlete.dart';
 import '../../data/models/post.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class Home17ProfileMedia extends StatelessWidget {
   final AppState appState;
@@ -154,6 +155,10 @@ class Home17ProfileMedia extends StatelessWidget {
             ),
           );
         },
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

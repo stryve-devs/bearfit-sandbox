@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
 import '../../state/app_state.dart';
 import '../../app/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class DiscoverFeedScreen extends StatelessWidget {
   final AppState appState;
@@ -11,6 +11,7 @@ class DiscoverFeedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(title: const Text('Discover Feed')),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
@@ -26,6 +27,10 @@ class DiscoverFeedScreen extends StatelessWidget {
             onTap: () => Navigator.pushNamed(context, AppRoutes.home4, arguments: post),
           );
         },
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

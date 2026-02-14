@@ -3,6 +3,7 @@ import '../../widgets/themed_text.dart';
 import '../../widgets/auth/login_form.dart';
 import 'widgets/google_sign_in_button.dart';
 import 'widgets/apple_sign_in_button.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});

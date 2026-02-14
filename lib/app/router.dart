@@ -3,7 +3,6 @@ import 'package:flutter_frontend/data/models/athlete.dart';
 import 'package:flutter_frontend/data/models/post.dart';
 import 'package:flutter_frontend/screens/home/home24_share_screen.dart';
 import '../state/app_state.dart';
-
 import '../screens/home/home_screen.dart';
 import '../screens/home/home3_discover_feed.dart';
 import '../screens/home/home4_post_detail.dart';

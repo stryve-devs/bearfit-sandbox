@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/app/router.dart';
 import '../../routes/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class StatsShareScreen extends StatefulWidget {
   final String title;
@@ -313,6 +314,10 @@ class _StatsShareScreenState extends State<StatsShareScreen> {
             child: const Text("Regenerate values", style: TextStyle(color: Color(0xFFB0B0B0), fontSize: 12)),
           ),
         ],
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

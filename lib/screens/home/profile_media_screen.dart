@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/app/router.dart';
 import '../../routes/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class Home17ProfileMedia extends StatelessWidget {
   final String username;
@@ -137,6 +138,10 @@ class Home17ProfileMedia extends StatelessWidget {
             ),
           );
         },
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/app/router.dart';
 import 'package:flutter_frontend/state/app_state.dart';
-
 import '../../routes/router.dart';
 import '../../widgets/athlete_avatar.dart';
 import '../../widgets/bf_card.dart';
+import '../../widgets/bf_bottom_nav.dart';
 import '../../data/models/post.dart';
 import '../../data/mock/home_mock_data.dart' as mock;
 
@@ -371,36 +371,9 @@ class _Home3DiscoverFeedState extends State<Home3DiscoverFeed> {
           );
         },
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF0B0B0B),
-          border: Border(top: BorderSide(color: Color(0xFF222222))),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _BottomIcon(
-                    icon: Icons.home,
-                    label: "Home",
-                    active: true,
-                    onTap: () => _onBottomNav(0)),
-                _BottomIcon(
-                    icon: Icons.fitness_center,
-                    label: "Workout",
-                    active: false,
-                    onTap: () => _onBottomNav(1)),
-                _BottomIcon(
-                    icon: Icons.person_outline,
-                    label: "Profile",
-                    active: false,
-                    onTap: () => _onBottomNav(2)),
-              ],
-            ),
-          ),
-        ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

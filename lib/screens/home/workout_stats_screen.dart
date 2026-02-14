@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/app/router.dart';
 import '../../routes/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class WorkoutStatsScreen extends StatefulWidget {
   final String title;
@@ -523,39 +524,9 @@ class _WorkoutStatsScreenState extends State<WorkoutStatsScreen> {
         ],
       ),
 
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF0B0B0B),
-          border: Border(top: BorderSide(color: Color(0xFF222222))),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _BottomIcon(
-                  icon: Icons.home,
-                  label: "Home",
-                  active: false,
-                  onTap: () => _onBottomNav(0),
-                ),
-                _BottomIcon(
-                  icon: Icons.fitness_center,
-                  label: "Workout",
-                  active: true,
-                  onTap: () => _onBottomNav(1),
-                ),
-                _BottomIcon(
-                  icon: Icons.person_outline,
-                  label: "Profile",
-                  active: false,
-                  onTap: () => _onBottomNav(2),
-                ),
-              ],
-            ),
-          ),
-        ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

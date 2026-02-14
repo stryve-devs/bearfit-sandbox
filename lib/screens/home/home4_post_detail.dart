@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_frontend/app/router.dart';
 import 'package:flutter_frontend/state/app_state.dart';
 import '../../widgets/workout_info_popup.dart';
-
 import '../../routes/router.dart';
 import '../../widgets/athlete_avatar.dart';
 import '../../widgets/bf_card.dart';
+import '../../widgets/bf_bottom_nav.dart';
 import '../../data/models/post.dart';
 
 class Home4PostDetail extends StatefulWidget {
@@ -34,6 +34,12 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
       AppRoutes.profile, // Home16 route
       arguments: widget.post.athlete,
     );
+  }
+
+  // ✅ ADDED: relative time label instead of fixed date text
+  String _relativeTimeLabel() {
+    // Demo (no timestamp available in Post model right now)
+    return "3 days ago";
   }
 
   void _showWorkoutPopup({
@@ -66,6 +72,8 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       builder: (_) {
+        final comments = post.comments;
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
           child: Column(
@@ -76,19 +84,29 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
               ),
               const SizedBox(height: 10),
+
+              // ✅ CHANGED: show something even if empty
               Expanded(
-                child: ListView.separated(
-                  itemCount: post.comments.length,
-                  separatorBuilder: (_, __) => const Divider(color: Color(0xFF222222), height: 1),
-                  itemBuilder: (_, i) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(
-                      post.comments[i],
-                      style: const TextStyle(color: Color(0xFFE6E6E6)),
-                    ),
-                  ),
-                ),
+                child: (comments.isEmpty)
+                    ? const Center(
+                        child: Text(
+                          "No comments yet",
+                          style: TextStyle(color: Color(0xFFB0B0B0)),
+                        ),
+                      )
+                    : ListView.separated(
+                        itemCount: comments.length,
+                        separatorBuilder: (_, __) => const Divider(color: Color(0xFF222222), height: 1),
+                        itemBuilder: (_, i) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            comments[i],
+                            style: const TextStyle(color: Color(0xFFE6E6E6)),
+                          ),
+                        ),
+                      ),
               ),
+
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -195,6 +213,8 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
@@ -226,18 +246,6 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
                   // Header row (Follow + athlete)
                   Row(
                     children: [
-                      TextButton(
-                        onPressed: () => setState(() => isFollowed = !isFollowed),
-                        child: Text(
-                          isFollowed ? "Followed" : "+ Follow",
-                          style: const TextStyle(
-                            color: Color(0xFFFF7A1A),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-
                       // ✅ ADDED: tap avatar -> Home16 Profile
                       GestureDetector(
                         onTap: _openProfile,
@@ -245,6 +253,7 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
                       ),
 
                       const SizedBox(width: 10),
+
                       Expanded(
                         child: GestureDetector(
                           // ✅ ADDED: tap username area -> Home16 Profile
@@ -258,11 +267,27 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
                                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
                               ),
                               const SizedBox(height: 2),
-                              const Text(
-                                "Monday, Nov 28, 2025 • 6:55",
-                                style: TextStyle(color: Color(0xFFB0B0B0), fontSize: 11),
+
+                              // ✅ CHANGED: relative time
+                              Text(
+                                _relativeTimeLabel(),
+                                style: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 11),
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      // ✅ CHANGED: Follow button on RIGHT
+                      TextButton(
+                        onPressed: () => setState(() => isFollowed = !isFollowed),
+                        child: Text(
+                          isFollowed ? "Followed" : "+ Follow",
+                          style: const TextStyle(
+                            color: Color(0xFFFF7A1A),
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -279,7 +304,7 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
                     children: const [
                       _MiniStat(label: "Time", value: "1h 25min"),
                       SizedBox(width: 16),
-                      _MiniStat(label: "Weight loss", value: "400 kgs"),
+                      _MiniStat(label: "Weight taken", value: "400 kgs"),
                       SizedBox(width: 16),
                       _MiniStat(label: "Distance", value: "4.5 km"),
                     ],
@@ -299,12 +324,14 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
 
-                  // Like / Comment / Share row (like screenshot icons)
+                  // ✅ CHANGED: Like / Comment / Share row (less congested + counts + share tile)
                   Row(
                     children: [
                       IconButton(
+                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                        padding: EdgeInsets.zero,
                         onPressed: () => setState(() => isLiked = !isLiked),
                         icon: Icon(
                           isLiked ? Icons.favorite : Icons.favorite_border,
@@ -313,21 +340,26 @@ class _Home4PostDetailState extends State<Home4PostDetail> {
                       ),
                       const SizedBox(width: 2),
                       const Text("100", style: TextStyle(color: Color(0xFFE6E6E6))),
-                      const SizedBox(width: 10),
+
+                      const SizedBox(width: 14),
+
                       IconButton(
+                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                        padding: EdgeInsets.zero,
                         onPressed: _openComments,
                         icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFFE6E6E6)),
                       ),
-                      IconButton(
-                        onPressed: _sharePost,
-                        icon: const Icon(Icons.send_outlined, color: Color(0xFFE6E6E6)),
-                      ),
+                      const SizedBox(width: 2),
+                      const Text("10", style: TextStyle(color: Color(0xFFE6E6E6))),
+
                       const Spacer(),
-                      if (isLiked)
-                        Text(
-                          "Liked",
-                          style: TextStyle(color: cs.primary, fontWeight: FontWeight.w700),
-                        ),
+
+                      IconButton(
+                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                        padding: EdgeInsets.zero,
+                        onPressed: _sharePost,
+                        icon: const Icon(Icons.ios_share, color: Color(0xFFE6E6E6)),
+                      ),
                     ],
                   ),
 

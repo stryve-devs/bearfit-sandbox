@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/app/router.dart';
 import '../../routes/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class WorkoutHistoryScreen extends StatefulWidget {
   final String title;     // e.g. "Bench Press (Barbell)"
@@ -303,6 +304,9 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     }
   }
 
+  // ✅ NEW (ONLY USED INSIDE HISTORY BODY): demo data for ONLY ONE exercise
+  bool get _showDemoGraph => widget.title.trim().toLowerCase() == "bench press (barbell)".toLowerCase();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -345,76 +349,188 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
 
           const SizedBox(height: 26),
 
-          // Center text "No exercise history"
+          // ✅ CHANGED ONLY THIS PART:
           Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text(
-                    "No exercise history",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    "When you log a workout with this\nexercise, your history will appear here.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Color(0xFFB0B0B0), fontSize: 12, height: 1.4),
-                  ),
-                ],
-              ),
-            ),
+            child: _showDemoGraph ? _demoGraphBody() : _emptyHistoryBody(),
           ),
 
-          // Bottom nav like screenshot
-          Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF0B0B0B),
-              border: Border(top: BorderSide(color: Color(0xFF222222))),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _BottomIcon(
-                      icon: Icons.home,
-                      label: "Home",
-                      active: false,
-                      onTap: () => _onBottomNav(0),
-                    ),
-                    _BottomIcon(
-                      icon: Icons.fitness_center,
-                      label: "Workout",
-                      active: true,
-                      onTap: () => _onBottomNav(1),
-                    ),
-                    _BottomIcon(
-                      icon: Icons.person_outline,
-                      label: "Profile",
-                      active: false,
-                      onTap: () => _onBottomNav(2),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+        ],
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
+      ),
+    );
+  }
+
+  // ✅ your old empty UI (unchanged)
+  Widget _emptyHistoryBody() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Text(
+            "No exercise history",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 8),
+          Text(
+            "When you log a workout with this\nexercise, your history will appear here.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xFFB0B0B0), fontSize: 12, height: 1.4),
           ),
         ],
       ),
     );
   }
 
-  Widget _topTab(String text, bool active, VoidCallback onTap) {
-    return InkWell(
+  // ✅ demo graph body (only for Bench Press)
+  Widget _demoGraphBody() {
+    // Example workout history: (date label, weight)
+    final data = <Map<String, dynamic>>[
+      {"d": "Jan", "w": 30},
+      {"d": "Feb", "w": 35},
+      {"d": "Mar", "w": 40},
+      {"d": "Apr", "w": 42},
+      {"d": "May", "w": 45},
+    ];
+
+    final maxW = data.map((e) => e["w"] as int).reduce((a, b) => a > b ? a : b);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Example history (demo)",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A2A2A),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Top set weight ($weightUnit)",
+                  style: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+
+                SizedBox(
+                  height: 160,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: List.generate(data.length, (i) {
+                      final w = data[i]["w"] as int;
+                      final label = data[i]["d"] as String;
+                      final pct = (w / maxW).clamp(0.0, 1.0);
+
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Container(
+                                height: 140 * pct,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF7A1A),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(label, style: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 11)),
+                              const SizedBox(height: 2),
+                              Text("$w", style: const TextStyle(color: Colors.white, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          const Text(
+            "Latest sessions",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+
+          Expanded(
+            child: ListView.separated(
+              itemCount: 4,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (_, i) {
+                final daysAgo = [2, 5, 9, 14][i];
+                final w = [45, 42, 40, 35][i];
+
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2A2A),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "$w $weightUnit",
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              "$daysAgo days ago",
+                              style: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward, color: Color(0xFFB0B0B0)),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _topTab(String label, bool selected, VoidCallback onTap) {
+    return GestureDetector(
       onTap: onTap,
-      child: Text(
-        text,
-        style: TextStyle(
-          color: active ? const Color(0xFFFF7A1A) : const Color(0xFFB0B0B0),
-          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-        ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : const Color(0xFFB0B0B0),
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+          if (selected)
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              height: 2,
+              width: 30,
+              color: const Color(0xFFFF7A1A),
+            ),
+        ],
       ),
     );
   }

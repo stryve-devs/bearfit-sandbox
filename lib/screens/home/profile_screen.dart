@@ -6,6 +6,7 @@ import 'package:flutter_frontend/state/app_state.dart';
 import '../../routes/router.dart';
 import '../../data/models/athlete.dart';
 import '../../data/models/post.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class ProfileScreen extends StatefulWidget {
   final AppState appState;
@@ -210,8 +211,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const Divider(color: Color(0xFF1A1A1A), height: 1),
                     itemBuilder: (_, i) {
                       return ListTile(
-                        leading:
-                            const CircleAvatar(backgroundColor: Color(0xFF2A2A2A)),
+                        leading: const CircleAvatar(
+                            backgroundColor: Color(0xFF2A2A2A)),
                         title: Text(items[i],
                             style: const TextStyle(color: Colors.white)),
                         trailing: TextButton(
@@ -313,7 +314,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final url =
                     "https://picsum.photos/seed/${athlete.username}_top_$i/300/200";
                 return GestureDetector(
-                  // ✅ FIXED: send Athlete (Home17 needs Athlete)
                   onTap: () => Navigator.pushNamed(
                     context,
                     AppRoutes.profileMedia,
@@ -321,14 +321,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
-                    child:
-                        Image.network(url, width: 110, height: 72, fit: BoxFit.cover),
+                    child: Image.network(url,
+                        width: 110, height: 72, fit: BoxFit.cover),
                   ),
                 );
               },
             ),
           ),
-
           const SizedBox(height: 12),
 
           // profile header
@@ -405,7 +404,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () => setState(() => isFollowed = !isFollowed),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFFF7A1A),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
               child: Text(isFollowed ? "Following" : "Follow"),
             ),
@@ -425,7 +425,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text("2 weeks ago", style: TextStyle(color: Color(0xFFB0B0B0))),
+              const Text("2 weeks ago",
+                  style: TextStyle(color: Color(0xFFB0B0B0))),
             ],
           ),
           const SizedBox(height: 8),
@@ -456,7 +457,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 8),
                           Text(
                             _labels[i],
-                            style: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 9),
+                            style: const TextStyle(
+                                color: Color(0xFFB0B0B0), fontSize: 9),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -509,6 +511,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ...feed.map((post) => _postCard(post)).toList(),
         ],
       ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
+      ),
     );
   }
 
@@ -522,9 +528,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         children: [
           Text(value,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w700)),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 11)),
+          Text(label,
+              style: const TextStyle(color: Color(0xFFB0B0B0), fontSize: 11)),
         ],
       ),
     );
@@ -544,7 +552,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -574,10 +583,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
                     Text("Star_butterf",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w700)),
                     SizedBox(height: 2),
                     Text("Monday, Nov 29, 2025 • 6:35",
-                        style: TextStyle(color: Color(0xFFB0B0B0), fontSize: 11)),
+                        style:
+                            TextStyle(color: Color(0xFFB0B0B0), fontSize: 11)),
                   ],
                 ),
               ),
@@ -587,7 +598,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 10),
 
           Text(post.caption,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              style:
+                  const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
 
           Row(
@@ -618,7 +630,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           const SizedBox(height: 8),
 
-          // actions row like screenshot
+          // ✅ FIXED actions row: Like + Comment, Share on RIGHT (only 3 actions)
           Row(
             children: [
               IconButton(
@@ -641,10 +653,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
               ),
               const Text("10", style: TextStyle(color: Colors.white)),
-              const SizedBox(width: 8),
+
+              const Spacer(), // ✅ pushes share to the far right
+
               IconButton(
                 onPressed: () => _sharePost(post),
-                icon: const Icon(Icons.send_outlined, color: Colors.white),
+                icon: const Icon(Icons.ios_share, color: Colors.white),
               ),
             ],
           ),

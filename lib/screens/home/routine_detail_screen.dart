@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class RoutineDetailScreen extends StatelessWidget {
   final String title;
@@ -29,6 +30,10 @@ class RoutineDetailScreen extends StatelessWidget {
           title: Text(items[i], style: const TextStyle(color: Colors.white)),
           subtitle: const Text("Tap to open (demo)", style: TextStyle(color: Color(0xFFB0B0B0))),
         ),
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

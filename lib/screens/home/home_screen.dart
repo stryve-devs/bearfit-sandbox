@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_frontend/app/router.dart';
 import 'package:flutter_frontend/state/app_state.dart';
 import '../../routes/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class HomeScreen extends StatefulWidget {
   final AppState appState;
@@ -118,185 +119,209 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 6),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row: Suggested Athletes + invite a friend
-            Row(
-              children: [
-                const Text(
-                  "Suggested Athletes",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.contacts),
-                  icon: const Icon(Icons.add, size: 18, color: Color(0xFFFF7A1A)),
-                  label: const Text(
-                    "invite a friend",
-                    style: TextStyle(color: Color(0xFFFF7A1A)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
 
-            // Athlete cards row
-            SizedBox(
-              height: 165,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: athletes.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (_, i) {
-                  final a = athletes[i];
-
-                  final athleteKey = a.username; // safe unique key
-                  final isFollowed = followed.contains(athleteKey);
-
-                  return GestureDetector(
-                    onTap: () => _openProfile(a), // ✅ open profile on card tap
-                    child: Container(
-                      width: 104,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A1A1A),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        children: [
-                          GestureDetector(
-                            onTap: () => _openProfile(a), // ✅ avatar tap
-                            child: CircleAvatar(
-                              radius: 30,
-                              backgroundImage: NetworkImage(a.avatarUrl),
-                              backgroundColor: const Color(0xFF2A2A2A),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          GestureDetector(
-                            onTap: () => _openProfile(a), // ✅ name tap
-                            child: Text(
-                              a.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white, fontSize: 12),
-                            ),
-                          ),
-                          Text("Feature", style: _smallGrey),
-                          const Spacer(),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 28,
-                            child: OutlinedButton(
-                              // ✅ prevent tap from also triggering profile open
-                              onPressed: () => setState(() {
-                                if (isFollowed) {
-                                  followed.remove(athleteKey);
-                                } else {
-                                  followed.add(athleteKey);
-                                }
-                              }),
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: cs.primary),
-                                foregroundColor: cs.primary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(
-                                isFollowed ? "Followed" : "Follow",
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // Center grey placeholders like screenshot
-            Center(
-              child: Column(
+      // ✅ CHANGE 1: make screen scrollable (prevents overflow yellow strip)
+      body: SingleChildScrollView(
+        child: Padding(
+          // small bottom space so content doesn't go under floating nav
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header row: Suggested Athletes + invite a friend
+              Row(
                 children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A2A2A),
-                      borderRadius: BorderRadius.circular(23),
-                    ),
+                  const Text(
+                    "Suggested Athletes",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    width: 240,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A2A2A),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    width: 200,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A2A2A),
-                      borderRadius: BorderRadius.circular(20),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: () {
+                      // ✅ still opens contacts like before
+                      Navigator.pushNamed(context, AppRoutes.contacts);
+
+                      // ✅ shows invited message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Invited ✅")),
+                      );
+                    },
+                    icon: const Icon(Icons.add, size: 18, color: Color(0xFFFF7A1A)),
+                    label: const Text(
+                      "invite a friend",
+                      style: TextStyle(color: Color(0xFFFF7A1A)),
                     ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 10),
 
-            const Spacer(),
+              // Athlete cards row
+              SizedBox(
+                height: 165,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: athletes.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  itemBuilder: (_, i) {
+                    final a = athletes[i];
 
-            Center(
-              child: Text(
-                "FOLLOW PEOPLE TO SEE THEIR WORKOUTS IN YOUR FEED.",
-                style: const TextStyle(color: Color(0xFF7A7A7A), fontSize: 10),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 14),
+                    final athleteKey = a.username; // safe unique key
+                    final isFollowed = followed.contains(athleteKey);
 
-            // Bottom buttons
-            SizedBox(
-              width: double.infinity,
-              height: 42,
-              child: OutlinedButton(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.home3),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFFF7A1A)),
-                  foregroundColor: const Color(0xFFFF7A1A),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    return GestureDetector(
+                      onTap: () => _openProfile(a), // ✅ open profile on card tap
+                      child: Container(
+                        width: 104,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1A1A),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () => _openProfile(a), // ✅ avatar tap
+                              child: CircleAvatar(
+                                radius: 30,
+                                backgroundImage: NetworkImage(a.avatarUrl),
+                                backgroundColor: const Color(0xFF2A2A2A),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            GestureDetector(
+                              onTap: () => _openProfile(a), // ✅ name tap
+                              child: Text(
+                                a.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.white, fontSize: 12),
+                              ),
+                            ),
+                            Text("Feature", style: _smallGrey),
+                            const Spacer(),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 28,
+                              child: OutlinedButton(
+                                onPressed: () => setState(() {
+                                  if (isFollowed) {
+                                    followed.remove(athleteKey);
+                                  } else {
+                                    followed.add(athleteKey);
+                                  }
+                                }),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: cs.primary),
+                                  foregroundColor: cs.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+
+                                // ✅ CHANGE 2: prevent "Followed" breaking
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    isFollowed ? "Followed" : "Follow",
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                child: const Text("Discover Athletes"),
               ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              height: 42,
-              child: OutlinedButton(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.contacts),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFFF7A1A)),
-                  foregroundColor: const Color(0xFFFF7A1A),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+
+              const SizedBox(height: 18),
+
+              // Center grey placeholders like screenshot
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2A2A),
+                        borderRadius: BorderRadius.circular(23),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 240,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2A2A),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: 200,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2A2A2A),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Text("Connect Contacts"),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 20),
+
+              Center(
+                child: Text(
+                  "FOLLOW PEOPLE TO SEE THEIR WORKOUTS IN YOUR FEED.",
+                  style: const TextStyle(color: Color(0xFF7A7A7A), fontSize: 10),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Bottom buttons
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.home3),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFFF7A1A)),
+                    foregroundColor: const Color(0xFFFF7A1A),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  ),
+                  child: const Text("Discover Athletes"),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.contacts),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFFF7A1A)),
+                    foregroundColor: const Color(0xFFFF7A1A),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  ),
+                  child: const Text("Connect Contacts"),
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

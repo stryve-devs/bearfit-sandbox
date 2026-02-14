@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class Home5FullImage extends StatelessWidget {
   final String imageUrl;
@@ -53,6 +54,10 @@ class Home5FullImage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

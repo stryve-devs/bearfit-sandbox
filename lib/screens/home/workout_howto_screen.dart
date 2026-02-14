@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/app/router.dart';
 import '../../routes/router.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class WorkoutHowToScreen extends StatefulWidget {
   final String title;
@@ -422,6 +423,10 @@ class _WorkoutHowToScreenState extends State<WorkoutHowToScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }

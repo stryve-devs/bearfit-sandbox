@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_frontend/app/router.dart';
 import 'package:flutter_frontend/routes/router.dart';
 import 'package:flutter_frontend/data/models/athlete.dart';
+import '../../widgets/bf_bottom_nav.dart';
 
 class Home21Routine extends StatefulWidget {
   final Athlete? athlete; // to go back to Home16 when tapping top-right icon
@@ -254,6 +255,10 @@ class _Home21RoutineState extends State<Home21Routine> {
             ],
           ),
         ],
+      ),
+      bottomNavigationBar: BfBottomNav(
+        currentIndex: 0, // ✅ Home will be orange
+        onTap: (i) {},
       ),
     );
   }
