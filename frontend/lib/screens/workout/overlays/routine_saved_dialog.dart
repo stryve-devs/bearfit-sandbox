@@ -9,47 +9,55 @@ class RoutineSavedDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: WorkoutColors.black,
+      backgroundColor: WorkoutColors.surface, // grey
       shape: const RoundedRectangleBorder(borderRadius: WRadii.pill),
       child: Container(
-        decoration: BoxDecoration(
-          color: WorkoutColors.black,
+        decoration: const BoxDecoration(
+          color: WorkoutColors.surface, // grey
           borderRadius: WRadii.pill,
-          border: Border.all(color: WorkoutColors.orange, width: 1.5),
+          // No border
         ),
         padding: const EdgeInsets.all(12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Routine saved successfully!', textAlign: TextAlign.center, style: WT.title(context)),
+            Text('Routine saved successfully!', textAlign: TextAlign.center, style: WT.title(context, color: WorkoutColors.white)),
             const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  child: Material(
-                    color: WorkoutColors.surface,
+                  child: InkWell(
                     borderRadius: WRadii.pill,
-                    child: InkWell(
-                      borderRadius: WRadii.pill,
-                      onTap: () => Navigator.pop(context, 'start'),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                        child: Center(child: Text('Start Workout', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange))),
+                    onTap: () => Navigator.pop(context, 'start'),
+                    child: Container(
+                      height: 41,
+                      decoration: const BoxDecoration(color: WorkoutColors.orange, borderRadius: WRadii.pill),
+                      child: const Center(
+                        child: Text(
+                          'Start Workout',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white),
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Material(
-                    color: WorkoutColors.surface,
+                  child: InkWell(
                     borderRadius: WRadii.pill,
-                    child: InkWell(
-                      borderRadius: WRadii.pill,
-                      onTap: () => Navigator.pop(context, 'close'),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                        child: Center(child: Text('Close', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange))),
+                    onTap: () => Navigator.pop(context, 'close'),
+                    child: Container(
+                      height: 41,
+                      decoration: const BoxDecoration(color: WorkoutColors.orange, borderRadius: WRadii.pill),
+                      child: const Center(
+                        child: Text(
+                          'Close',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white),
+                        ),
                       ),
                     ),
                   ),

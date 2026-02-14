@@ -1,16 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../constants/workout_colors.dart';
 import '../../constants/workout_typography.dart';
 import '../../constants/workout_sizes.dart';
 import '../../widgets/workout/custom_header.dart';
-import '../../widgets/workout/pill_button.dart';
 import '../../constants/workout_strings.dart';
 import '../../data/repositories/routine_repository.dart';
 import 'overlays/empty_routine_dialog.dart';
 import 'overlays/discard_workout_dialog.dart';
 import 'overlays/clock_overlay.dart';
 import 'overlays/workout_in_progress_sheet.dart';
+import 'overlays/rest_picker_sheet.dart';
+import 'overlays/rest_complete_overlay.dart';
+import '../../widgets/common/asset_svg.dart';
 
 class SetEntry {
   double weightKg;
@@ -23,8 +26,33 @@ class SetEntry {
 class ExerciseLog {
   final String name;
   final List<SetEntry> sets;
-  ExerciseLog(this.name, {List<SetEntry>? initial}) : sets = initial ?? [SetEntry()];
+  int restSeconds; // current rest setting for this exercise
+  int restRemaining; // countdown state (seconds), 0 when not resting
+  Timer? restTimer;
+
+  ExerciseLog(this.name, {List<SetEntry>? initial, this.restSeconds = 60})
+      : sets = initial ?? [SetEntry()],
+        restRemaining = 0;
+
   double get totalVolumeKg => sets.fold(0.0, (sum, s) => sum + s.volumeKg);
+
+  void startRest(VoidCallback onTick, VoidCallback onDone) {
+    restTimer?.cancel();
+    restRemaining = restSeconds;
+    restTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      restRemaining = (restRemaining - 1).clamp(0, 999999);
+      onTick();
+      if (restRemaining == 0) {
+        t.cancel();
+        onDone();
+      }
+    });
+  }
+
+  void stopRest() {
+    restTimer?.cancel();
+    restRemaining = 0;
+  }
 }
 
 class LogWorkoutScreen extends StatefulWidget {
@@ -39,7 +67,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
   final List<ExerciseLog> _exercises = [];
   String? _addExerciseLabel;
   Routine? _currentRoutine;
-  bool _loadedFromArgs = false; // prevents reloading the routine and clearing added exercises
+  bool _loadedFromArgs = false;
 
   double get _w => MediaQuery.of(context).size.width;
   bool get _isPhone => _w < 380;
@@ -53,7 +81,6 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Load routine from route arguments ONLY once
     if (!_loadedFromArgs) {
       final arg = ModalRoute.of(context)?.settings.arguments;
       if (arg is Routine) {
@@ -70,7 +97,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
         t.sets,
         (_) => SetEntry(weightKg: t.targetWeightKg, reps: t.targetReps, done: false),
       );
-      _exercises.add(ExerciseLog(t.name, initial: initialSets));
+      _exercises.add(ExerciseLog(t.name, initial: initialSets, restSeconds: t.restSeconds));
     }
     _currentRoutine = r;
     _addExerciseLabel = null;
@@ -80,6 +107,9 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    for (final e in _exercises) {
+      e.restTimer?.cancel();
+    }
     super.dispose();
   }
 
@@ -92,7 +122,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
     if (selected is String && selected.isNotEmpty) {
       setState(() {
         _addExerciseLabel = selected;
-        _exercises.add(ExerciseLog(selected));
+        _exercises.add(ExerciseLog(selected)); // default restSeconds=60
       });
     }
   }
@@ -152,7 +182,6 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
     }
   }
 
-  // Update the current routine to include exactly the current workout (including newly added exercises)
   void _updateRoutineFromWorkout() {
     if (_currentRoutine == null) return;
     final updatedTargets = _exercises.map((ex) {
@@ -163,6 +192,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
         sets: sets,
         targetWeightKg: first.weightKg,
         targetReps: first.reps,
+        restSeconds: ex.restSeconds,
       );
     }).toList();
     final updated = Routine(title: _currentRoutine!.title, targets: updatedTargets);
@@ -170,9 +200,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
     setState(() {
       _currentRoutine = updated;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Routine updated with current workout')),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Routine updated with current workout')));
   }
 
   @override
@@ -187,7 +215,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
             CustomHeader(
               left: GestureDetector(
                 onTap: _onLeave,
-                child: const Icon(Icons.arrow_back_ios_new, color: WorkoutColors.orange, size: 18),
+                child: SvgPicture.asset('assets/icons/arrow_back.svg', colorFilter: const ColorFilter.mode(WorkoutColors.orange, BlendMode.srcIn), height: 18),
               ),
               center: Text('Log Workout', style: WT.h2(context)),
               right: Row(
@@ -220,7 +248,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
                   children: [
                     const SizedBox(height: 12),
 
-                    // Metrics: use Expanded cells so they shrink on small screens
+                    // Metrics
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Row(
@@ -234,7 +262,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Saved routine picker (always available if you have any)
+                    // Row 1: Choose from saved routine (uses list/menu SVG)
                     if (routines.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -247,7 +275,12 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.list_alt, color: WorkoutColors.orange, size: 20),
+                                const AssetSvg(
+                                  assetPath: 'assets/icons/icon_menu.svg',
+                                  width: 20,
+                                  height: 20,
+                                  color: WorkoutColors.orange,
+                                ),
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: Text(
@@ -264,46 +297,68 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
 
                     const SizedBox(height: 12),
 
-                    // Add Exercise
+                    // Row 2: Add Exercise (uses plus icon)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: PillButton(
-                        label: _addExerciseLabel ?? WS.addExercise,
-                        onTap: _pickExercise,
-                        bg: WorkoutColors.surface,
-                        fg: WorkoutColors.orange,
+                      child: Container(
+                        height: 41,
+                        decoration: const BoxDecoration(color: WorkoutColors.surface, borderRadius: WRadii.pill),
+                        child: InkWell(
+                          borderRadius: WRadii.pill,
+                          onTap: _pickExercise,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.add, color: WorkoutColors.orange, size: 20),
+                              const SizedBox(width: 8),
+                              Text(WS.addExercise, style: WT.h2(context, color: WorkoutColors.orange)),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    // Exercises list with sets table
+                    // Exercises list
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Column(
-                        children: _exercises.map((ex) => _ExerciseCard(isPhone: _isPhone, exercise: ex, onChanged: () => setState(() {}))).toList(),
+                        children: _exercises.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final ex = entry.value;
+                          return _ExerciseCard(
+                            key: ValueKey('${ex.name}-$index'),
+                            isPhone: _isPhone,
+                            exercise: ex,
+                            onChanged: () => setState(() {}),
+                            onRestChanged: (seconds) {
+                              setState(() => ex.restSeconds = seconds);
+                            },
+                            onRestEnded: () {
+                              showDialog(context: context, builder: (_) => RestCompleteOverlay(exerciseName: ex.name));
+                            },
+                          );
+                        }).toList(),
                       ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    // Update Routine (visible when a routine is selected)
+                    // Update Routine with background wrapper (surface pill)
                     if (_currentRoutine != null)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Material(
-                          color: WorkoutColors.black,
-                          borderRadius: WRadii.pill,
+                        child: Container(
+                          height: 41,
+                          decoration: const BoxDecoration(color: WorkoutColors.surface, borderRadius: WRadii.pill),
                           child: InkWell(
                             borderRadius: WRadii.pill,
                             onTap: _updateRoutineFromWorkout,
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                              child: Center(
-                                child: Text(
-                                  'Update Routine with current workout',
-                                  style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange),
-                                ),
+                            child: const Center(
+                              child: Text(
+                                'Update Routine with current workout',
+                                style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange),
                               ),
                             ),
                           ),
@@ -312,7 +367,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Settings / Discard moved below exercises
+                    // Settings / Discard
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Row(
@@ -323,7 +378,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
                               decoration: const BoxDecoration(color: WorkoutColors.surface, borderRadius: WRadii.pill),
                               child: InkWell(
                                 borderRadius: WRadii.pill,
-                                onTap: () {},
+                                onTap: () => Navigator.pushNamed(context, '/settings'),
                                 child: Center(child: Text('Settings', style: WT.h2(context, color: WorkoutColors.orange))),
                               ),
                             ),
@@ -359,7 +414,6 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
   }
 
   Widget _metricBlock(BuildContext c, String label, String value) {
-    // Shrink text slightly on narrow screens
     final labelStyle = WT.title(c);
     final valueStyle = WT.body(c);
     return Container(
@@ -370,26 +424,56 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
         children: [
           Text(label, style: labelStyle),
           const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(value, style: valueStyle),
-          ),
+          FittedBox(fit: BoxFit.scaleDown, child: Text(value, style: valueStyle)),
         ],
       ),
     );
   }
 }
 
-class _ExerciseCard extends StatelessWidget {
+class _ExerciseCard extends StatefulWidget {
   final ExerciseLog exercise;
   final VoidCallback onChanged;
   final bool isPhone;
-  const _ExerciseCard({required this.exercise, required this.onChanged, required this.isPhone});
+  final ValueChanged<int> onRestChanged;
+  final VoidCallback onRestEnded;
+
+  const _ExerciseCard({
+    super.key,
+    required this.exercise,
+    required this.onChanged,
+    required this.isPhone,
+    required this.onRestChanged,
+    required this.onRestEnded,
+  });
+
+  @override
+  State<_ExerciseCard> createState() => _ExerciseCardState();
+}
+
+class _ExerciseCardState extends State<_ExerciseCard> {
+  String get _restLabel {
+    final s = widget.exercise.restSeconds;
+    return s >= 60 ? '${(s ~/ 60)}m' : '${s}s';
+  }
+
+  String get _restRemainingLabel {
+    final s = widget.exercise.restRemaining;
+    final m = s ~/ 60;
+    final sec = s % 60;
+    return '${m.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void dispose() {
+    widget.exercise.restTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final pillPadH = isPhone ? 20.0 : 24.0;
-    final pillPadV = isPhone ? 8.0 : 10.0;
+    final pillPadH = widget.isPhone ? 20.0 : 24.0;
+    final pillPadV = widget.isPhone ? 8.0 : 10.0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -398,8 +482,52 @@ class _ExerciseCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(exercise.name, style: const TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white)),
+          // Title + Rest selector
+          Row(
+            children: [
+              Expanded(
+                child: Text(widget.exercise.name, style: const TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white)),
+              ),
+              InkWell(
+                onTap: () async {
+                  final s = await showModalBottomSheet<int>(
+                    context: context,
+                    backgroundColor: WorkoutColors.black,
+                    isScrollControlled: true,
+                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                    builder: (_) => RestPickerSheet(initial: widget.exercise.restSeconds),
+                  );
+                  if (s != null) {
+                    widget.onRestChanged(s);
+                    setState(() {});
+                  }
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.timer, color: WorkoutColors.orange, size: 18),
+                    const SizedBox(width: 6),
+                    Text('Rest: $_restLabel', style: const TextStyle(fontFamily: 'Quicksand', fontSize: 14, color: WorkoutColors.orange)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Active rest countdown above the table
+          if (widget.exercise.restRemaining > 0) ...[
+            const SizedBox(height: 8),
+            Container(
+              height: 32,
+              decoration: const BoxDecoration(color: WorkoutColors.black, borderRadius: WRadii.pill),
+              child: Center(
+                child: Text('Rest: $_restRemainingLabel', style: const TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 14, color: WorkoutColors.orange)),
+              ),
+            ),
+          ],
+
           const SizedBox(height: 10),
+
           Row(
             children: const [
               Expanded(child: Center(child: Text('Set', style: TextStyle(fontFamily: 'Quicksand', fontSize: 12, color: WorkoutColors.white)))),
@@ -409,23 +537,19 @@ class _ExerciseCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          ...exercise.sets.asMap().entries.map((entry) {
+
+          ...widget.exercise.sets.asMap().entries.map((entry) {
             final i = entry.key;
             final set = entry.value;
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
                 children: [
-                  // Set #
                   Expanded(
                     child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text('${i + 1}', style: const TextStyle(fontFamily: 'Quicksand', fontSize: 16, color: WorkoutColors.white)),
-                      ),
+                      child: FittedBox(fit: BoxFit.scaleDown, child: Text('${i + 1}', style: const TextStyle(fontFamily: 'Quicksand', fontSize: 16, color: WorkoutColors.white))),
                     ),
                   ),
-                  // Weight
                   Expanded(
                     child: Center(
                       child: FittedBox(
@@ -433,17 +557,16 @@ class _ExerciseCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _iconBtn('-', () { set.weightKg = (set.weightKg - 1).clamp(0, double.infinity); onChanged(); }, isPhone),
+                            _iconBtn('-', () { set.weightKg = (set.weightKg - 1).clamp(0, double.infinity); widget.onChanged(); }, widget.isPhone),
                             const SizedBox(width: 6),
                             Text('${set.weightKg.toStringAsFixed(0)} kg', style: const TextStyle(fontFamily: 'Quicksand', fontSize: 16, color: WorkoutColors.white)),
                             const SizedBox(width: 6),
-                            _iconBtn('+', () { set.weightKg = set.weightKg + 1; onChanged(); }, isPhone),
+                            _iconBtn('+', () { set.weightKg = set.weightKg + 1; widget.onChanged(); }, widget.isPhone),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  // Reps
                   Expanded(
                     child: Center(
                       child: FittedBox(
@@ -451,24 +574,36 @@ class _ExerciseCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _iconBtn('-', () { set.reps = (set.reps - 1).clamp(0, 999); onChanged(); }, isPhone),
+                            _iconBtn('-', () { set.reps = (set.reps - 1).clamp(0, 999); widget.onChanged(); }, widget.isPhone),
                             const SizedBox(width: 6),
                             Text('${set.reps}', style: const TextStyle(fontFamily: 'Quicksand', fontSize: 16, color: WorkoutColors.white)),
                             const SizedBox(width: 6),
-                            _iconBtn('+', () { set.reps = (set.reps + 1).clamp(0, 999); onChanged(); }, isPhone),
+                            _iconBtn('+', () { set.reps = (set.reps + 1).clamp(0, 999); widget.onChanged(); }, widget.isPhone),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  // Done
                   Expanded(
                     child: Center(
                       child: GestureDetector(
-                        onTap: () { set.done = !set.done; onChanged(); },
+                        onTap: () {
+                          set.done = !set.done;
+                          widget.onChanged();
+                          // If marking a set done, (re)start rest for this exercise
+                          if (set.done) {
+                            widget.exercise.startRest(
+                              () => setState(() {}),
+                              () {
+                                widget.onRestEnded();
+                                setState(() {}); // hide countdown
+                              },
+                            );
+                          }
+                        },
                         child: Container(
-                          width: isPhone ? 18 : 20,
-                          height: isPhone ? 18 : 20,
+                          width: widget.isPhone ? 18 : 20,
+                          height: widget.isPhone ? 18 : 20,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(color: WorkoutColors.orange, width: 2),
@@ -482,13 +617,14 @@ class _ExerciseCard extends StatelessWidget {
               ),
             );
           }).toList(),
+
           const SizedBox(height: 8),
           Material(
             color: WorkoutColors.black,
             borderRadius: WRadii.pill,
             child: InkWell(
               borderRadius: WRadii.pill,
-              onTap: () { exercise.sets.add(SetEntry()); onChanged(); },
+              onTap: () { widget.exercise.sets.add(SetEntry()); widget.onChanged(); },
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: pillPadH, vertical: pillPadV),
                 child: const Center(child: Text('+ Add Set', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange))),
@@ -500,26 +636,14 @@ class _ExerciseCard extends StatelessWidget {
     );
   }
 
+  // Plus/minus WITHOUT pill/background
   Widget _iconBtn(String label, VoidCallback onTap, bool isPhone) {
-    // Smaller wrapper and padding on phones to avoid overflow
-    return Material(
-      color: WorkoutColors.black,
-      borderRadius: WRadii.pill,
-      child: InkWell(
-        borderRadius: WRadii.pill,
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: isPhone ? 8 : 10, vertical: isPhone ? 4 : 6),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Quicksand',
-              fontWeight: FontWeight.w700,
-              fontSize: isPhone ? 14 : 16,
-              color: WorkoutColors.orange,
-            ),
-          ),
-        ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: isPhone ? 6 : 8, vertical: isPhone ? 2 : 3),
+        child: Text(label, style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: isPhone ? 14 : 16, color: WorkoutColors.orange)),
       ),
     );
   }

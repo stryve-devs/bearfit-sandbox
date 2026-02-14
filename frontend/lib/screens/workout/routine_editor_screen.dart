@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../constants/workout_colors.dart';
 import '../../constants/workout_typography.dart';
 import '../../constants/workout_sizes.dart';
 import '../../widgets/workout/custom_header.dart';
-import '../../widgets/workout/pill_button.dart';
 import '../../constants/workout_strings.dart';
 import 'overlays/empty_routine_dialog.dart';
 import 'overlays/routine_saved_dialog.dart';
 import '../../data/repositories/routine_repository.dart';
+import 'overlays/rest_picker_sheet.dart';
+import '../../widgets/common/asset_svg.dart';
 
 class RoutineEditorScreen extends StatefulWidget {
   const RoutineEditorScreen({super.key});
@@ -25,7 +27,10 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
 
   void _onSave() async {
     if (_targets.isEmpty) {
-      showDialog(context: context, builder: (_) => const EmptyRoutineDialog(message: 'Your routine needs at least one exercise'));
+      showDialog(
+        context: context,
+        builder: (_) => const EmptyRoutineDialog(message: 'Your routine needs at least one exercise'),
+      );
       return;
     }
     final routine = Routine(
@@ -62,15 +67,41 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
         child: Column(
           children: [
             CustomHeader(
-              left: GestureDetector(onTap: () => Navigator.pop(context), child: Text(WS.cancel, style: WT.body(context, color: WorkoutColors.orange))),
+              left: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: SvgPicture.asset(
+                  'assets/icons/arrow_back.svg',
+                  height: 18,
+                  colorFilter: const ColorFilter.mode(WorkoutColors.orange, BlendMode.srcIn),
+                ),
+              ),
               center: Text(WS.workout, style: WT.h2(context)),
               right: GestureDetector(
                 onTap: _onSave,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  height: 24,
-                  decoration: const BoxDecoration(color: WorkoutColors.orange, borderRadius: WRadii.pill),
-                  child: Center(child: Text(WS.save, style: WT.body(context, color: WorkoutColors.black))),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 56,
+                    maxWidth: 72,
+                    minHeight: 22,
+                    maxHeight: 22,
+                  ),
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: WorkoutColors.orange,
+                      borderRadius: WRadii.pill,
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          fontFamily: 'Quicksand',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: WorkoutColors.black,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -87,51 +118,67 @@ class _RoutineEditorScreenState extends State<RoutineEditorScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Inline editable title
+                            // Editable title with NO background
                             !_editingTitle
                                 ? GestureDetector(
                                     onTap: () => setState(() => _editingTitle = true),
-                                    child: Text(titleCtrl.text.isEmpty ? 'Routine title' : titleCtrl.text, style: WT.h2(context, color: const Color(0xB3FD7A2A))),
-                                  )
-                                : Container(
-                                    height: 41,
-                                    decoration: const BoxDecoration(color: WorkoutColors.surface, borderRadius: WRadii.pill),
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    alignment: Alignment.centerLeft,
-                                    child: TextField(
-                                      controller: titleCtrl,
-                                      style: WT.title(context),
-                                      decoration: const InputDecoration(border: InputBorder.none),
-                                      onSubmitted: (_) => setState(() => _editingTitle = false),
-                                      onEditingComplete: () => setState(() => _editingTitle = false),
+                                    child: Text(
+                                      titleCtrl.text.isEmpty ? 'Routine title' : titleCtrl.text,
+                                      style: WT.h2(context, color: const Color(0xB3FD7A2A)),
                                     ),
+                                  )
+                                : TextField(
+                                    controller: titleCtrl,
+                                    autofocus: true,
+                                    style: WT.h2(context, color: WorkoutColors.orange),
+                                    decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+                                    onSubmitted: (_) => setState(() => _editingTitle = false),
+                                    onEditingComplete: () => setState(() => _editingTitle = false),
                                   ),
 
                             const SizedBox(height: 16),
 
-                            // Meditating figure centered
+                            // Muscle icon via AssetSvg (shows fallback if missing)
                             Center(
-                              child: Icon(
-                                Icons.self_improvement,
-                                color: WorkoutColors.white,
-                                size: _isPhone ? 48 : 60,
+                              child: AssetSvg(
+                                assetPath: 'assets/icons/muscle_up.svg',
+                                height: _isPhone ? 48 : 60,
+                                // If you want single-color tint:
+                                // color: WorkoutColors.white,
                               ),
                             ),
 
                             const SizedBox(height: 16),
 
-                            PillButton(label: WS.addExercise, onTap: _pickExercise, bg: WorkoutColors.surface, fg: WorkoutColors.orange),
+                            // Add Exercise with plus icon
+                            Container(
+                              height: 41,
+                              decoration: const BoxDecoration(color: WorkoutColors.surface, borderRadius: WRadii.pill),
+                              child: InkWell(
+                                borderRadius: WRadii.pill,
+                                onTap: _pickExercise,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.add, color: WorkoutColors.orange, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(WS.addExercise, style: WT.h2(context, color: WorkoutColors.orange)),
+                                  ],
+                                ),
+                              ),
+                            ),
 
                             const SizedBox(height: 16),
 
-                            if (_targets.isNotEmpty) ...[
-                              const SizedBox(height: 12),
+                            if (_targets.isNotEmpty)
                               Column(
                                 children: _targets
-                                    .map<Widget>((t) => _TargetCard(target: t, onChanged: () => setState(() {})))
+                                    .map((t) => _TargetCard(
+                                          target: t,
+                                          onChanged: () => setState(() {}),
+                                        ))
                                     .toList(),
                               ),
-                            ],
                           ],
                         ),
                       ),
@@ -161,16 +208,70 @@ class _TargetCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(target.name, style: const TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white)),
+          Text(
+            target.name,
+            style: const TextStyle(
+              fontFamily: 'Quicksand',
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              color: WorkoutColors.white,
+            ),
+          ),
           const SizedBox(height: 10),
+
+          // Rest selector
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.timer, color: WorkoutColors.orange, size: 18),
+              const SizedBox(width: 6),
+              InkWell(
+                onTap: () async {
+                  final s = await showModalBottomSheet<int>(
+                    context: context,
+                    backgroundColor: WorkoutColors.black,
+                    isScrollControlled: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) => RestPickerSheet(initial: target.restSeconds),
+                  );
+                  if (s != null) {
+                    target.restSeconds = s;
+                    onChanged();
+                  }
+                },
+                child: Text(
+                  'Rest: ${target.restSeconds >= 60 ? '${(target.restSeconds ~/ 60)}m' : '${target.restSeconds}s'}',
+                  style: const TextStyle(fontFamily: 'Quicksand', fontSize: 14, color: WorkoutColors.orange),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
+
           Row(
             children: const [
-              Expanded(child: Center(child: Text('Sets', style: TextStyle(fontFamily: 'Quicksand', fontSize: 12, color: WorkoutColors.white)))),
-              Expanded(child: Center(child: Text('Target Weight', style: TextStyle(fontFamily: 'Quicksand', fontSize: 12, color: WorkoutColors.white)))),
-              Expanded(child: Center(child: Text('Target Reps', style: TextStyle(fontFamily: 'Quicksand', fontSize: 12, color: WorkoutColors.white)))),
+              Expanded(
+                child: Center(
+                  child: Text('Sets', style: TextStyle(fontFamily: 'Quicksand', fontSize: 12, color: WorkoutColors.white)),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: Text('Target Weight', style: TextStyle(fontFamily: 'Quicksand', fontSize: 12, color: WorkoutColors.white)),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: Text('Target Reps', style: TextStyle(fontFamily: 'Quicksand', fontSize: 12, color: WorkoutColors.white)),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 6),
+
           Row(
             children: [
               Expanded(
@@ -178,11 +279,17 @@ class _TargetCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _iconBtn('-', () { target.sets = (target.sets - 1).clamp(0, 999); onChanged(); }),
+                      _iconBtn('-', () {
+                        target.sets = (target.sets - 1).clamp(0, 999);
+                        onChanged();
+                      }),
                       const SizedBox(width: 8),
                       Text('${target.sets}', style: const TextStyle(fontFamily: 'Quicksand', fontSize: 16, color: WorkoutColors.white)),
                       const SizedBox(width: 8),
-                      _iconBtn('+', () { target.sets = (target.sets + 1).clamp(0, 999); onChanged(); }),
+                      _iconBtn('+', () {
+                        target.sets = (target.sets + 1).clamp(0, 999);
+                        onChanged();
+                      }),
                     ],
                   ),
                 ),
@@ -192,11 +299,18 @@ class _TargetCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _iconBtn('-', () { target.targetWeightKg = (target.targetWeightKg - 1).clamp(0, double.infinity); onChanged(); }),
+                      _iconBtn('-', () {
+                        target.targetWeightKg = (target.targetWeightKg - 1).clamp(0, double.infinity);
+                        onChanged();
+                      }),
                       const SizedBox(width: 8),
-                      Text('${target.targetWeightKg.toStringAsFixed(0)} kg', style: const TextStyle(fontFamily: 'Quicksand', fontSize: 16, color: WorkoutColors.white)),
+                      Text('${target.targetWeightKg.toStringAsFixed(0)} kg',
+                          style: const TextStyle(fontFamily: 'Quicksand', fontSize: 16, color: WorkoutColors.white)),
                       const SizedBox(width: 8),
-                      _iconBtn('+', () { target.targetWeightKg = target.targetWeightKg + 1; onChanged(); }),
+                      _iconBtn('+', () {
+                        target.targetWeightKg = target.targetWeightKg + 1;
+                        onChanged();
+                      }),
                     ],
                   ),
                 ),
@@ -206,11 +320,17 @@ class _TargetCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _iconBtn('-', () { target.targetReps = (target.targetReps - 1).clamp(0, 999); onChanged(); }),
+                      _iconBtn('-', () {
+                        target.targetReps = (target.targetReps - 1).clamp(0, 999);
+                        onChanged();
+                      }),
                       const SizedBox(width: 8),
                       Text('${target.targetReps}', style: const TextStyle(fontFamily: 'Quicksand', fontSize: 16, color: WorkoutColors.white)),
                       const SizedBox(width: 8),
-                      _iconBtn('+', () { target.targetReps = (target.targetReps + 1).clamp(0, 999); onChanged(); }),
+                      _iconBtn('+', () {
+                        target.targetReps = (target.targetReps + 1).clamp(0, 999);
+                        onChanged();
+                      }),
                     ],
                   ),
                 ),
@@ -222,16 +342,21 @@ class _TargetCard extends StatelessWidget {
     );
   }
 
+  // Plus/minus WITHOUT pill/background
   Widget _iconBtn(String label, VoidCallback onTap) {
-    return Material(
-      color: WorkoutColors.black,
-      borderRadius: WRadii.pill,
-      child: InkWell(
-        borderRadius: WRadii.pill,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Text(label, style: const TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange)),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Quicksand',
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            color: WorkoutColors.orange,
+          ),
         ),
       ),
     );

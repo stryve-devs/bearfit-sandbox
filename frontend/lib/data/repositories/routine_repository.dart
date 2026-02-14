@@ -4,12 +4,14 @@ class ExerciseTarget {
   int sets;
   double targetWeightKg;
   int targetReps;
+  int restSeconds; 
 
   ExerciseTarget({
     required this.name,
     this.sets = 1,
     this.targetWeightKg = 0,
     this.targetReps = 0,
+    this.restSeconds = 60,
   });
 }
 
@@ -26,7 +28,6 @@ class RoutineRepository {
   static List<Routine> all() => List.unmodifiable(_routines);
 
   static void add(Routine routine) {
-    // Replace existing routine with same title
     _routines.removeWhere((r) => r.title == routine.title);
     _routines.add(routine);
   }

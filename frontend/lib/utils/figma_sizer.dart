@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 
-/// Scales Figma values (base width 393) to the current device for consistent spacing & sizes.
 class FigmaSizer {
   FigmaSizer.of(BuildContext context)
       : size = MediaQuery.of(context).size,

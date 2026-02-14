@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/workout_colors.dart';
 
-/// Placeholder screen for exercise details (how to, stats).
-/// Accepts an optional 'exerciseName' via route arguments.
 class ExerciseDetailBlankScreen extends StatelessWidget {
   const ExerciseDetailBlankScreen({super.key});
 

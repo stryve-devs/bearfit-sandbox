@@ -77,27 +77,23 @@ class _ClockOverlayState extends State<ClockOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final timerTextColor = isTimer ? WorkoutColors.orange : WorkoutColors.black;
-    final timerBgOpacity = isTimer ? 1.0 : 0.7;
-    final swTextColor = isTimer ? WorkoutColors.black : WorkoutColors.orange;
-    final swBgOpacity = isTimer ? 0.7 : 1.0;
+    final selectedBg = WorkoutColors.orange;
+    final unselectedBg = WorkoutColors.black;
 
     return Dialog(
-      backgroundColor: WorkoutColors.black,
+      backgroundColor: WorkoutColors.surface, 
       shape: const RoundedRectangleBorder(borderRadius: WRadii.pill),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 337),
         child: Container(
-          decoration: BoxDecoration(
-            color: WorkoutColors.black,
+          decoration: const BoxDecoration(
+            color: WorkoutColors.surface, 
             borderRadius: WRadii.pill,
-            border: Border.all(color: WorkoutColors.orange, width: 1.5),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Title
               const Center(
                 child: Text(
                   'Clock',
@@ -106,32 +102,31 @@ class _ClockOverlayState extends State<ClockOverlay> {
               ),
               const SizedBox(height: 16),
 
-              // Toggle pills
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Material(
-                    color: WorkoutColors.surface.withOpacity(timerBgOpacity),
+                    color: isTimer ? selectedBg : unselectedBg,
                     borderRadius: WRadii.pill,
                     child: InkWell(
                       borderRadius: WRadii.pill,
                       onTap: () => setState(() => isTimer = true),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                        child: Text('Timer', style: WT.h2(context, color: timerTextColor)),
+                        child: Text('Timer', style: WT.h2(context, color: WorkoutColors.white)),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Material(
-                    color: WorkoutColors.surface.withOpacity(swBgOpacity),
+                    color: !isTimer ? selectedBg : unselectedBg,
                     borderRadius: WRadii.pill,
                     child: InkWell(
                       borderRadius: WRadii.pill,
                       onTap: () => setState(() => isTimer = false),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                        child: Text('Stopwatch', style: WT.h2(context, color: swTextColor)),
+                        child: Text('Stopwatch', style: WT.h2(context, color: WorkoutColors.white)),
                       ),
                     ),
                   ),
@@ -139,13 +134,14 @@ class _ClockOverlayState extends State<ClockOverlay> {
               ),
 
               const SizedBox(height: 12),
-              Text(isTimer ? _fmt(timerDur) : _fmt(stopwatchElapsed), style: WT.title(context)),
+              // Main time (white)
+              Text(isTimer ? _fmt(timerDur) : _fmt(stopwatchElapsed), style: WT.title(context, color: WorkoutColors.white)),
               const SizedBox(height: 12),
 
-              // Always-visible "Set duration" when Timer is selected (works even if you miss the icon)
+              // "Set duration" button (only for Timer)
               if (isTimer)
                 Material(
-                  color: WorkoutColors.black,
+                  color: WorkoutColors.black, 
                   borderRadius: WRadii.pill,
                   child: InkWell(
                     borderRadius: WRadii.pill,
@@ -155,7 +151,7 @@ class _ClockOverlayState extends State<ClockOverlay> {
                       child: Center(
                         child: Text(
                           'Set duration',
-                          style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange),
+                          style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white),
                         ),
                       ),
                     ),
@@ -169,40 +165,40 @@ class _ClockOverlayState extends State<ClockOverlay> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Material(
-                    color: WorkoutColors.surface,
+                    color: WorkoutColors.black,
                     borderRadius: WRadii.pill,
                     child: InkWell(
                       borderRadius: WRadii.pill,
                       onTap: _start,
                       child: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        child: Text('Start', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange)),
+                        child: Text('Start', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white)),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Material(
-                    color: WorkoutColors.surface,
+                    color: WorkoutColors.black,
                     borderRadius: WRadii.pill,
                     child: InkWell(
                       borderRadius: WRadii.pill,
                       onTap: _stop,
                       child: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        child: Text('Stop', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange)),
+                        child: Text('Stop', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white)),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Material(
-                    color: WorkoutColors.surface,
+                    color: WorkoutColors.black,
                     borderRadius: WRadii.pill,
                     child: InkWell(
                       borderRadius: WRadii.pill,
                       onTap: _reset,
                       child: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        child: Text('Reset', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.orange)),
+                        child: Text('Reset', style: TextStyle(fontFamily: 'Quicksand', fontWeight: FontWeight.w700, fontSize: 16, color: WorkoutColors.white)),
                       ),
                     ),
                   ),

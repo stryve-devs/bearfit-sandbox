@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../../constants/workout_colors.dart';
 import '../../constants/workout_sizes.dart';
 
-/// Bottom nav with rounded background, slight grey surface, and active/inactive colors.
-/// Tabs: 0=Home, 1=Workout, 2=Profile
-/// - Active: orange
-/// - Inactive: orange at 70% opacity
+/// Bottom nav with rounded background.
+/// Color rule:
+/// - Active tab icon + label: orange
+/// - Inactive tabs: white
 class WorkoutBottomNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onTap;
@@ -13,7 +13,7 @@ class WorkoutBottomNav extends StatelessWidget {
   const WorkoutBottomNav({super.key, required this.index, required this.onTap});
 
   Color _tabColor(int i) {
-    return i == index ? WorkoutColors.orange : WorkoutColors.orange.withOpacity(0.7);
+    return i == index ? WorkoutColors.orange : WorkoutColors.white;
   }
 
   @override

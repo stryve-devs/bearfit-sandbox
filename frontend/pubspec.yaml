@@ -1,5 +1,5 @@
 name: flutter_frontend
-description: A Flutter frontend replacing the previous React Native app.
+description: A Flutter frontend"
 publish_to: "none"
 
 environment:
@@ -16,10 +16,8 @@ dev_dependencies:
     sdk: flutter
 
 flutter:
-  # CRITICAL: enables Material Icons on web/Android
   uses-material-design: true
 
-  # Quicksand (variable font used for all weights)
   fonts:
     - family: Quicksand
       fonts:
@@ -29,3 +27,7 @@ flutter:
           weight: 600
         - asset: assets/fonts/Quicksand-VariableFont_wght.ttf
           weight: 700
+  assets:
+    - assets/icons/arrow_back.svg
+    - assets/icons/muscle_up.svg
+    - assets/icons/icon_menu.svg

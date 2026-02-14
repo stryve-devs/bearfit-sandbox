@@ -3,13 +3,26 @@ import '../models/exercise_model.dart';
 class ExerciseRepository {
   static final List<String> muscleList = [
     'All Muscles',
-    'Chest',
+    'Abs',
+    'Abductors',
+    'Adductors',
     'Back',
     'Biceps',
-    'Triceps',
+    'Calves',
+    'Cardio',
+    'Chest',
+    'Forearms',
+    'Full Body',
+    'Glutes',
+    'Hamstrings',
+    'Lats',
+    'Lower Back',
+    'Neck',
+    'Quads',
     'Shoulders',
-    'Legs',
-    'Abs',
+    'Traps',
+    'Triceps',
+    'Upper Back'
   ];
 
   static final List<String> equipmentList = [
