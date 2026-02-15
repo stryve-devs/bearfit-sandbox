@@ -10,7 +10,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build:web": "expo export:web"
+    "build:web": "expo export:web",
+    "flutter:web-fixed-port": "flutter run -d web-server --web-hostname localhost --web-port 63422",
+    "flutter:chrome-fixed-port": "flutter run -d chrome --web-port 63422"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

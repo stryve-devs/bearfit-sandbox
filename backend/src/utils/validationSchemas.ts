@@ -27,12 +27,31 @@ export const refreshTokenSchema = z.object({
 });
 
 // Google auth validation schema
-export const googleAuthSchema = z.object({
-  idToken: z.string().min(1, 'ID token is required'),
+const googleAuthBase = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters').max(150, 'Username too long').optional(),
+  name: z.string().min(1, 'Name is required').max(150, 'Name too long').optional(),
 });
+
+// Accept either an ID token (from Google) or an email fallback (when idToken isn't available on the client)
+export const googleAuthSchema = z.union([
+  googleAuthBase.extend({ idToken: z.string().min(1, 'ID token is required') }),
+  googleAuthBase.extend({ email: z.string().email('Invalid email format').min(1, 'Email is required') }),
+]);
 
 // Types for TypeScript
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
+
+// Workout creation schema (supports optional client-generated ID for offline entries)
+export const createWorkoutSchema = z.object({
+  client_id: z.string().max(100).optional(),
+  date: z.string().optional(),
+  type: z.string().max(30).optional(),
+  duration_minutes: z.number().optional(),
+  calories_burned: z.number().optional(),
+  notes: z.string().optional(),
+});
+
+export type CreateWorkoutInput = z.infer<typeof createWorkoutSchema>;

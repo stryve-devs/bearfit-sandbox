@@ -1,4 +1,4 @@
-name: flutter_frontend
+name: frontend
 description: A Flutter frontend replacing the previous React Native app.
 publish_to: "none"
 
@@ -9,12 +9,19 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
+  google_sign_in: ^5.4.0
+  path_provider: ^2.0.0
+  http: ^0.13.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
+    - assets/auth/icons/
+    - assets/auth/images/
+    - assets/workout/icons/
+    - assets/workout/images/

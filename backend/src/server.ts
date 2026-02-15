@@ -1,36 +1,38 @@
+import 'dotenv/config';
 import express from 'express';
 import { json } from 'body-parser';
 import routes from './routes';
-import meRoutes from './routes/me.routes';
-import { startPurgeJob } from './jobs/purgeJob';
-import corsMiddleware from './config/corsConfig';
-import { errorHandler, notFoundHandler } from './middlewares/errorMiddleware';
-import 'dotenv/config';
+import corsConfig from './config/corsConfig';
+import { startPurgeJob } from './jobs/me/purgeJob';
+import { connectRedis } from './config/redisClient';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
-// Apply CORS middleware first
-app.use(corsMiddleware);
-
-// Body parser middleware
+// Middleware
 app.use(json());
+app.use(corsConfig);
 
-// Register general routes under /api
+// Routes
 app.use('/api', routes);
 
-// Register /me routes under /api/me
-app.use('/api/me', meRoutes);
+const start = async () => {
+    try {
+        // Try to connect to Redis but don't abort startup if Redis is unavailable.
+        // This makes local development and testing easier when Redis isn't running.
+        await connectRedis();
+    } catch (err) {
+        console.warn('Warning: Failed to connect to Redis. Continuing without Redis.', err);
+    }
 
-// 404 handler - must be after all routes
-app.use(notFoundHandler);
+    // Start background jobs
+    startPurgeJob();
 
-// Error handling middleware - must be last
-app.use(errorHandler);
+    // Start server and bind to 0.0.0.0 so it is reachable from other devices on the LAN
+    const HOST = process.env.HOST || '0.0.0.0';
+    app.listen(PORT, HOST, () => {
+        console.log(`Server is running at http://${HOST}:${PORT}`);
+    });
+};
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
-    // start background purge job with default 30-day grace period
-    startPurgeJob(30);
-});
+start();
