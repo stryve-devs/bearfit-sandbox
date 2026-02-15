@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'app/app.dart';
+
+void main() {
+  runApp(const BearFitApp());
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +17,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Center(
-          child: Text('Welcome to Stryve'),
+          child: Text('Welcome to BearFit'),
         ),
       ),
     );
