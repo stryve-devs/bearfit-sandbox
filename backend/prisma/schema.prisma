@@ -45,55 +45,46 @@ model progress {
 }
 
 model users {
-  user_id        Int        @id @default(autoincrement())
-  name           String     @db.VarChar(150)
-  username       String?    @unique @db.VarChar(150)
-
-  // 🔐 AUTH CORE
-  email          String     @unique @db.VarChar(320)
+  user_id        Int              @id @default(autoincrement())
+  name           String           @db.VarChar(150)
+  username       String?          @unique @db.VarChar(150)
+  email          String           @unique @db.VarChar(320)
   password_hash  String
-  role           String     @default("USER") @db.VarChar(20)
-  is_active      Boolean    @default(true)
-  email_verified Boolean    @default(false)
-
-  // 👤 PROFILE / FITNESS
-  gender         String?    @db.VarChar(10)
-  date_of_birth  DateTime?  @db.Date
-  height         Decimal?   @db.Decimal(5, 2)
-  weight         Decimal?   @db.Decimal(5, 2)
-  activity_level String?    @db.VarChar(30)
-  goal           String?    @db.VarChar(50)
-
-  // 🕒 TIMESTAMPS
-  created_at     DateTime   @default(now())
-  updated_at     DateTime   @updatedAt
-
-  // 🔗 RELATIONS
+  role           String           @default("USER") @db.VarChar(20)
+  is_active      Boolean          @default(true)
+  email_verified Boolean          @default(false)
+  gender         String?          @db.VarChar(10)
+  date_of_birth  DateTime?        @db.Date
+  height         Decimal?         @db.Decimal(5, 2)
+  weight         Decimal?         @db.Decimal(5, 2)
+  activity_level String?          @db.VarChar(30)
+  goal           String?          @db.VarChar(50)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  deleted_at     DateTime?
   meals          meals[]
   progress       progress[]
-  workouts       workouts[]
   refresh_tokens refresh_tokens[]
+  workouts       workouts[]
 
   @@index([email])
 }
 
 model refresh_tokens {
-  id          Int      @id @default(autoincrement())
-  token       String   @unique
-  user_id     Int
-  expires_at  DateTime
-  revoked     Boolean  @default(false)
-  created_at  DateTime @default(now())
-
-  users users @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  user_id    Int
+  expires_at DateTime
+  revoked    Boolean  @default(false)
+  created_at DateTime @default(now())
+  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
-
-
 
 model workout_exercises {
   workout_exercise_id Int        @id @default(autoincrement())
   workout_id          Int?
   exercise_id         Int?
+  exercise_name       String     @db.VarChar(150)
   sets                Int?
   reps                Int?
   weight              Decimal?   @db.Decimal(6, 2)
